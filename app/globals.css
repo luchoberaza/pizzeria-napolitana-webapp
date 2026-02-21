@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Napolitana palette */
+    --background: 0 0% 97%;
+    --foreground: 0 0% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 16%;
+    --primary: 3 73% 41%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 16%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 27 82% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 3 73% 41%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 3 73% 41%;
+    --radius: 0.75rem;
+
+    /* Custom Napolitana tokens */
+    --napoli-red: 4 73% 41%;
+    --napoli-red-dark: 6 83% 30%;
+    --napoli-orange: 27 82% 50%;
+    --napoli-gold: 38 87% 57%;
+    --napoli-green: 122 39% 49%;
+
+    --chart-1: 4 73% 41%;
+    --chart-2: 27 82% 50%;
+    --chart-3: 38 87% 57%;
+    --chart-4: 122 39% 49%;
+    --chart-5: 6 83% 30%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 16%;
+    --sidebar-primary: 3 73% 41%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 16%;
+    --sidebar-border: 0 0% 89%;
+    --sidebar-ring: 3 73% 41%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 3 73% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 27 82% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 3 73% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 3 73% 50%;
+
+    --napoli-red: 4 73% 50%;
+    --napoli-red-dark: 6 83% 40%;
+    --napoli-orange: 27 82% 55%;
+    --napoli-gold: 38 87% 62%;
+    --napoli-green: 122 39% 55%;
+
+    --chart-1: 4 73% 50%;
+    --chart-2: 27 82% 55%;
+    --chart-3: 38 87% 62%;
+    --chart-4: 122 39% 55%;
+    --chart-5: 6 83% 40%;
+
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 3 73% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 3 73% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .glass {
+    background: rgba(30, 30, 30, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media print {
+  @page {
+    margin: 5mm;
+  }
+
+  body {
+    visibility: hidden;
+    background: white !important;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible;
+  }
+
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+.print-only {
+  display: none;
+}
