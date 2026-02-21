@@ -1,13 +1,16 @@
 {
-  "name": "my-project",
-  "version": "0.1.0",
+  "name": "pizzeria-napolitana",
+  "version": "1.0.0",
   "private": true,
+  "main": "main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "db:init": "node --env-file=.env.local scripts/db-init.mjs"
+    "db:init": "node --env-file=.env.local scripts/db-init.mjs",
+    "electron:dev": "electron .",
+    "electron:build": "next build && electron-builder"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -66,8 +69,37 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^34.3.0",
+    "electron-builder": "^25.1.8",
+    "electron-is-dev": "^3.0.1",
+    "electron-rebuild": "^3.2.9",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "5.7.3"
+  },
+  "build": {
+    "appId": "com.pizzerianapolitana.app",
+    "productName": "Pizzeria Napolitana",
+    "directories": {
+      "output": "dist"
+    },
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "public/logo.png"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*",
+      "node_modules/better-sqlite3/**/*",
+      "node_modules/bindings/**/*",
+      "node_modules/file-uri-to-path/**/*"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**/*"
+    ]
   }
 }

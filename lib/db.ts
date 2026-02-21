@@ -6,10 +6,28 @@ let db: Database.Database | null = null
 
 function getDb(): Database.Database {
   if (!db) {
-    const dbPath = process.env.SQLITE_DB_PATH
+    let dbPath = process.env.SQLITE_DB_PATH
+
+    // Check if we are running in Electron
+    const isElectron = !!process.versions.electron
+    if (isElectron) {
+      // In Electron, we want to store the database in the userData folder
+      const { app } = require("electron")
+      const userDataPath = app.getPath("userData")
+      dbPath = path.join(userDataPath, "pizzeria.sqlite")
+    } else if (!dbPath) {
+      // For the standalone launcher, use a local data folder
+      dbPath = path.join(process.cwd(), "data", "pizzeria.sqlite")
+    }
+
     if (!dbPath) throw new Error("SQLITE_DB_PATH environment variable is not set")
 
-    fs.mkdirSync(path.dirname(dbPath), { recursive: true })
+    // Ensure directory exists
+    const dbDir = path.dirname(dbPath)
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true })
+    }
+
     db = new Database(dbPath)
     db.pragma("foreign_keys = ON")
   }
