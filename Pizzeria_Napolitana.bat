@@ -43,7 +43,7 @@ if %errorlevel% neq 0 (
 :: Abrir en modo Aplicación (sin barras de navegador)
 echo.
 echo [LISTO] Abriendo ventana del programa...
-start msedge --app=http://localhost:3000
+start msedge --app=http://127.0.0.1:3000
 
 echo.
 echo ==========================================

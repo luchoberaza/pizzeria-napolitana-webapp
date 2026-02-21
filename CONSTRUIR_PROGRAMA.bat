@@ -15,7 +15,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [1/4] Instalando paquetes necesarios (esto puede tardar)...
-call npm install --omit=dev
+call npm install
 
 echo.
 echo [2/4] Preparando el motor del programa...

@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import { type Order, toggleDelivered, deleteOrder } from "./actions"
+import { type Order, toggleDelivered, deleteOrder } from "@/app/(dashboard)/pedidos/actions"
 import { CustomerInvoice } from "@/components/customer-invoice"
 import {
   AlertDialog,

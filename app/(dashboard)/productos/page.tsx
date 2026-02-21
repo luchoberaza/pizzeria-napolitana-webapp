@@ -1,6 +1,6 @@
-import { getProducts } from "./actions"
-import { getIngredients } from "../ingredientes/actions"
-import { ProductsClient } from "./products-client"
+import { getProducts } from "@/app/(dashboard)/productos/actions"
+import { ProductsClient } from "@/app/(dashboard)/productos/products-client"
+import { getIngredients } from "@/app/(dashboard)/ingredientes/actions"
 
 export default async function ProductosPage() {
   const [products, ingredients] = await Promise.all([

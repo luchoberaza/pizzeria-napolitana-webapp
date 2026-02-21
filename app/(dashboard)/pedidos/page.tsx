@@ -1,4 +1,4 @@
-import { getOrders } from "./actions"
+import { getOrders } from "@/app/(dashboard)/pedidos/actions"
 import { OrdersClient } from "./orders-client"
 
 export default async function PedidosPage() {

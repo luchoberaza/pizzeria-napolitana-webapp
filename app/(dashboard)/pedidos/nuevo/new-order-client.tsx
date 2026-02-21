@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import type { Product } from "../../productos/actions"
 import type { Ingredient } from "../../ingredientes/actions"
-import { createOrder, type OrderItem } from "../actions"
+import { createOrder, type OrderItem } from "@/app/(dashboard)/pedidos/actions"
 import { OrderItemEditor } from "@/components/order-item-editor"
 import { KitchenTicket } from "@/components/kitchen-ticket"
 

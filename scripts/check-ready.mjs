@@ -5,7 +5,7 @@ let retries = 0;
 
 const checkServer = () => {
     process.stdout.write('.');
-    http.get('http://localhost:3000', (res) => {
+    http.get('http://127.0.0.1:3000', (res) => {
         if (res.statusCode === 200) {
             console.log('\n[OK] Servidor detectado.');
             process.exit(0);

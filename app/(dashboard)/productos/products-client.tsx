@@ -32,7 +32,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-} from "./actions"
+} from "@/app/(dashboard)/productos/actions"
 
 export function ProductsClient({
   products,
@@ -269,11 +269,10 @@ export function ProductsClient({
                         key={ing.id}
                         type="button"
                         onClick={() => toggleIngredient(ing.id)}
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 ${
-                          isSelected
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                        }`}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 ${isSelected
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                          }`}
                       >
                         {ing.name}
                       </button>

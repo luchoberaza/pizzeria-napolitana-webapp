@@ -1,5 +1,5 @@
-import { getIngredients } from "./actions"
-import { IngredientsClient } from "./ingredients-client"
+import { getIngredients } from "@/app/(dashboard)/ingredientes/actions"
+import { IngredientsClient } from "@/app/(dashboard)/ingredientes/ingredients-client"
 
 export default async function IngredientesPage() {
   const ingredients = await getIngredients()

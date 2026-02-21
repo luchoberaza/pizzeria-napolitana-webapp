@@ -28,7 +28,7 @@ import {
   createIngredient,
   updateIngredient,
   deleteIngredient,
-} from "./actions"
+} from "@/app/(dashboard)/ingredientes/actions"
 
 export function IngredientsClient({
   ingredients,
