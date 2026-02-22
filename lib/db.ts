@@ -10,7 +10,7 @@ function getDb(): Database.Database {
 
     if (!dbPath) {
       // For the standalone launcher, use a local data folder
-      dbPath = path.join(process.cwd(), "data", "pizzeria.sqlite")
+      dbPath = path.resolve(process.cwd(), "data", "pizzeria.sqlite")
     }
 
     // Ensure directory exists

@@ -1,54 +1,48 @@
 @echo off
+setlocal
 title Pizzeria Napolitana - Lanzador
+
 echo ==========================================
 echo    INICIANDO PIZZERIA NAPOLITANA
 echo ==========================================
 echo.
 
-:: Verificar si existe node_modules
-if not exist "node_modules" (
-    echo [ERROR] No se encontraron las dependencias instaladas.
-    echo Por favor, ejecuta primero: CONSTRUIR_PROGRAMA.bat
-    pause
-    exit /b
-)
-
 :: Verificar si existe la carpeta de compilacion .next
 if not exist ".next" (
     echo [ERROR] No se encontro la carpeta de compilacion .next.
     echo Por favor, ejecuta primero: CONSTRUIR_PROGRAMA.bat
-    echo Esto preparara el motor del programa para su primer uso.
+    echo.
     pause
-    exit /b
+    exit /b 1
 )
 
 :: Iniciar el servidor Next.js en segundo plano
-echo [1/2] Iniciando servidor interno (Produccion)...
-echo Ten en cuenta que solo puede haber una pizzeria abierta a la vez.
+echo [1/2] Iniciando motor del programa...
 start /min "PizzeriaServer" cmd /c "npm run start"
 
 :: Esperar a que el servidor este listo
-echo [2/2] Verificando que el sistema este listo...
+echo [2/2] Conectando con el servidor...
 node scripts/check-ready.mjs
 
-:: Si el chequeo fallo, no abrir el navegador
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] No se pudo conectar con el servidor interno.
-    echo Posible causa: El puerto 3000 esta siendo usado por otro programa.
+    echo [ERROR] No se pudo establecer conexion con el motor interno.
+    echo Intenta cerrar el programa por completo y volver a abrirlo.
+    echo.
     pause
-    exit /b
+    exit /b 1
 )
 
-:: Abrir en modo Aplicación (sin barras de navegador)
+:: Abrir en modo Aplicacion
 echo.
 echo [LISTO] Abriendo ventana del programa...
 start msedge --app=http://127.0.0.1:3000
 
 echo.
 echo ==========================================
-echo    EL PROGRAMA ESTA FUNCIONANDO
+echo    PROGRAMA EN EJECUCION
 echo ==========================================
-echo No cierres esta ventana mientras uses el programa.
+echo Puedes minimizar esta ventana.
+echo Para cerrar, cierra la ventana de la Pizzeria y luego esta consola.
 echo.
 pause

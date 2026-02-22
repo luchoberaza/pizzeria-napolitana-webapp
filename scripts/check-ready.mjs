@@ -1,32 +1,26 @@
 import http from 'http';
 
-const MAX_RETRIES = 60; // 30 seconds total
-let retries = 0;
+const MAX_WAIT_MS = 30000; // 30 seconds
+const START_TIME = Date.now();
 
 const checkServer = () => {
+    if (Date.now() - START_TIME > MAX_WAIT_MS) {
+        console.error('\n[ERROR] El servidor tardó demasiado en responder.');
+        process.exit(1);
+    }
+
     process.stdout.write('.');
     http.get('http://127.0.0.1:3000', (res) => {
         if (res.statusCode === 200) {
             console.log('\n[OK] Servidor detectado.');
             process.exit(0);
         } else {
-            retry();
+            setTimeout(checkServer, 500);
         }
     }).on('error', () => {
-        retry();
+        setTimeout(checkServer, 500);
     });
 };
 
-const retry = () => {
-    retries++;
-    if (retries > MAX_RETRIES) {
-        console.error('\n[ERROR] El servidor está tardando demasiado en responder.');
-        console.error('Asegúrate de haber ejecutado "CONSTRUIR_PROGRAMA.bat" primero.');
-        console.error('También verifica que no haya otro programa usando el puerto 3000.');
-        process.exit(1);
-    }
-    setTimeout(checkServer, 500);
-};
-
-console.log('Verificando conexión local (esto puede tardar unos segundos)...');
+console.log('Verificando conexión local (pueden ser 15-20s la primera vez)...');
 checkServer();

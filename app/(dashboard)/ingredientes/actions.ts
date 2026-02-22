@@ -31,6 +31,7 @@ export async function createIngredient(formData: FormData) {
     [name.trim(), extraCost]
   )
   revalidatePath("/ingredientes")
+  revalidatePath("/productos")
   return { success: true }
 }
 
@@ -51,11 +52,13 @@ export async function updateIngredient(formData: FormData) {
     [name.trim(), extraCost, id]
   )
   revalidatePath("/ingredientes")
+  revalidatePath("/productos")
   return { success: true }
 }
 
 export async function deleteIngredient(id: number) {
   await dbRun("DELETE FROM ingredients WHERE id = ?", [id])
   revalidatePath("/ingredientes")
+  revalidatePath("/productos")
   return { success: true }
 }
