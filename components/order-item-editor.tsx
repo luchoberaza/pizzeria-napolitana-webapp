@@ -78,7 +78,7 @@ export function OrderItemEditor({
         {
           id: ing.id,
           name: ing.name,
-          extraCost: parseFloat(ing.extra_cost),
+          extraCost: parseFloat(ing.extra_cost) || 0,
         },
       ],
     }))

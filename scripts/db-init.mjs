@@ -4,12 +4,19 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const PROJECT_ROOT = path.resolve(__dirname, "..")
 
-const dbPath = process.env.SQLITE_DB_PATH
-if (!dbPath) {
+const rawDbPath = process.env.SQLITE_DB_PATH
+if (!rawDbPath) {
     console.error("Missing SQLITE_DB_PATH env var")
     process.exit(1)
 }
+
+// Resolve relative paths against the project root so the script works
+// regardless of the working directory from which it is invoked.
+const dbPath = path.isAbsolute(rawDbPath)
+    ? rawDbPath
+    : path.resolve(PROJECT_ROOT, rawDbPath)
 
 fs.mkdirSync(path.dirname(dbPath), { recursive: true })
 

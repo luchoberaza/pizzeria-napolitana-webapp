@@ -79,10 +79,14 @@ export function IngredientsClient({
   async function handleDelete() {
     if (!deleting) return
     startTransition(async () => {
-      await deleteIngredient(deleting.id)
-      toast.success("Ingrediente eliminado")
-      setDeleteDialogOpen(false)
-      setDeleting(null)
+      const result = await deleteIngredient(deleting.id)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Ingrediente eliminado")
+        setDeleteDialogOpen(false)
+        setDeleting(null)
+      }
     })
   }
 
@@ -127,7 +131,7 @@ export function IngredientsClient({
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {search
-              ? "No se encontraron ingredientes con esa busqueda"
+              ? "No se encontraron ingredientes con esa búsqueda"
               : "Agrega tu primer ingrediente para comenzar"}
           </p>
         </div>
@@ -174,7 +178,7 @@ export function IngredientsClient({
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" key={editing?.id ?? "new"}>
           <DialogHeader>
             <DialogTitle>
               {editing ? "Editar Ingrediente" : "Nuevo Ingrediente"}
@@ -204,7 +208,7 @@ export function IngredientsClient({
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  defaultValue={editing ? parseFloat(editing.extra_cost).toFixed(2) : ""}
+                  defaultValue={editing ? (parseFloat(editing.extra_cost) || 0).toFixed(2) : ""}
                 />
               </div>
             </div>

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { getProducts } from "@/app/(dashboard)/productos/actions"
 import { getIngredients } from "@/app/(dashboard)/ingredientes/actions"
 import { NewOrderClient } from "@/app/(dashboard)/pedidos/nuevo/new-order-client"

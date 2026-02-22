@@ -66,3 +66,5 @@ CREATE TABLE IF NOT EXISTS order_item_extra_ingredients (
   FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
   FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE SET NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);

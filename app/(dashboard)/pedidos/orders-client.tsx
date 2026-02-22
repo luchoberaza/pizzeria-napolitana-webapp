@@ -90,10 +90,18 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
 
   function handleToggleDelivered(orderId: number, delivered: boolean) {
     startTransition(async () => {
-      await toggleDelivered(orderId, delivered)
-      toast.success(
-        delivered ? "Pedido marcado como enviado" : "Pedido marcado como pendiente"
-      )
+      try {
+        const result = await toggleDelivered(orderId, delivered)
+        if (result.error) {
+          toast.error(result.error)
+        } else {
+          toast.success(
+            delivered ? "Pedido marcado como enviado" : "Pedido marcado como pendiente"
+          )
+        }
+      } catch {
+        toast.error("Error al actualizar el pedido")
+      }
     })
   }
 
@@ -107,11 +115,18 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
   function handleDelete() {
     if (!orderToDelete) return
     startTransition(async () => {
-      const result = await deleteOrder(orderToDelete)
-      if (result.success) {
-        toast.success("Pedido eliminado correctamente")
-        setOrderToDelete(null)
-      } else {
+      try {
+        const result = await deleteOrder(orderToDelete)
+        if (result.error) {
+          toast.error(result.error)
+          setOrderToDelete(null)
+          return
+        }
+        if (result.success) {
+          toast.success("Pedido eliminado correctamente")
+          setOrderToDelete(null)
+        }
+      } catch {
         toast.error("Error al eliminar el pedido")
       }
     })
@@ -173,7 +188,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
       <div className="relative mt-6">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar por folio o direccion..."
+          placeholder="Buscar por folio o dirección..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -192,7 +207,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
           <p className="mt-1 text-sm text-muted-foreground">
             {search || filter !== "all"
               ? "No se encontraron pedidos con ese criterio"
-              : "Los pedidos apareceran aqui"}
+              : "Los pedidos aparecerán aquí"}
           </p>
         </div>
       ) : (
@@ -214,8 +229,8 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
               {/* Group Orders */}
               <div className="space-y-4">
                 {groups[title].map((order) => {
-                  const discount = parseFloat(order.discount_amount)
-                  const total = parseFloat(order.total_snapshot)
+                  const discount = Number(order.discount_amount) || 0
+                  const total = Number(order.total_snapshot) || 0
 
                   return (
                     <div
@@ -292,7 +307,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                             <div className="flex items-center gap-1.5">
                               <Checkbox
                                 id={`delivered-${order.id}`}
-                                checked={order.status_delivered}
+                                checked={!!order.status_delivered}
                                 onCheckedChange={(checked) =>
                                   handleToggleDelivered(order.id, checked as boolean)
                                 }

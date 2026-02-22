@@ -1,6 +1,7 @@
 "use server"
 
-import { dbAll, dbRun } from "@/lib/db"
+import Database from "better-sqlite3"
+import { dbRunReturn, dbTransaction } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
 export type OrderItem = {
@@ -27,10 +28,10 @@ export type Order = {
   address_street: string
   address_floor_apt: string
   address_reference: string
-  status_delivered: boolean
-  discount_amount: string
+  status_delivered: number
+  discount_amount: number
   discount_reason: string
-  total_snapshot: string
+  total_snapshot: number
   created_at: string
   items: OrderItemDB[]
 }
@@ -40,14 +41,14 @@ export type OrderItemDB = {
   order_id: number
   product_id: number | null
   product_name_snapshot: string
-  base_price_snapshot: string
+  base_price_snapshot: number
   quantity: number
   note: string
   removed_ingredients: { id: number; ingredient_name_snapshot: string }[]
   extra_ingredients: {
     id: number
     ingredient_name_snapshot: string
-    extra_cost_snapshot: string
+    extra_cost_snapshot: number
   }[]
 }
 
@@ -63,134 +64,167 @@ function calculateTotal(items: OrderItem[], discountAmount: number): number {
 }
 
 export async function createOrder(data: OrderData) {
-  if (!data.addressStreet.trim()) return { error: "La dirección es requerida" }
-  if (data.items.length === 0) return { error: "Agrega al menos un item" }
+  try {
+    if (!data.addressStreet.trim()) return { error: "La dirección es requerida" }
+    if (data.items.length === 0) return { error: "Agrega al menos un item" }
 
-  const total = calculateTotal(data.items, data.discountAmount)
+    const discountAmount = Math.max(0, data.discountAmount)
+    const total = calculateTotal(data.items, discountAmount)
 
-  await dbRun(
-    `INSERT INTO orders (address_street, address_floor_apt, address_reference, discount_amount, discount_reason, total_snapshot)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      data.addressStreet.trim(),
-      data.addressFloorApt.trim(),
-      data.addressReference.trim(),
-      data.discountAmount,
-      data.discountReason.trim(),
-      total,
-    ]
-  )
-
-  const orderRows = await dbAll<{ id: number }>(
-    "SELECT id FROM orders ORDER BY id DESC LIMIT 1"
-  )
-  const orderId = orderRows[0].id
-
-  for (const item of data.items) {
-    await dbRun(
-      `INSERT INTO order_items (order_id, product_id, product_name_snapshot, base_price_snapshot, quantity, note)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [orderId, item.productId, item.productName, item.basePrice, item.quantity, item.note.trim()]
-    )
-
-    const itemRows = await dbAll<{ id: number }>(
-      "SELECT id FROM order_items WHERE order_id = ? ORDER BY id DESC LIMIT 1",
-      [orderId]
-    )
-    const itemId = itemRows[0].id
-
-    for (const ri of item.removedIngredients) {
-      await dbRun(
-        "INSERT INTO order_item_removed_ingredients (order_item_id, ingredient_id, ingredient_name_snapshot) VALUES (?, ?, ?)",
-        [itemId, ri.id, ri.name]
+    const orderId = await dbTransaction((database: Database.Database) => {
+      const insertOrder = database.prepare(
+        `INSERT INTO orders (address_street, address_floor_apt, address_reference, discount_amount, discount_reason, total_snapshot)
+         VALUES (?, ?, ?, ?, ?, ?)`
       )
-    }
-
-    for (const ei of item.extraIngredients) {
-      await dbRun(
-        "INSERT INTO order_item_extra_ingredients (order_item_id, ingredient_id, ingredient_name_snapshot, extra_cost_snapshot) VALUES (?, ?, ?, ?)",
-        [itemId, ei.id, ei.name, ei.extraCost]
+      const orderResult = insertOrder.run(
+        data.addressStreet.trim(),
+        data.addressFloorApt.trim(),
+        data.addressReference.trim(),
+        discountAmount,
+        data.discountReason.trim(),
+        total
       )
-    }
+      const orderId = Number((orderResult as { lastInsertRowid: number }).lastInsertRowid)
+
+      const insertItem = database.prepare(
+        `INSERT INTO order_items (order_id, product_id, product_name_snapshot, base_price_snapshot, quantity, note)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      const insertRemoved = database.prepare(
+        "INSERT INTO order_item_removed_ingredients (order_item_id, ingredient_id, ingredient_name_snapshot) VALUES (?, ?, ?)"
+      )
+      const insertExtra = database.prepare(
+        "INSERT INTO order_item_extra_ingredients (order_item_id, ingredient_id, ingredient_name_snapshot, extra_cost_snapshot) VALUES (?, ?, ?, ?)"
+      )
+
+      for (const item of data.items) {
+        const itemResult = insertItem.run(
+          orderId,
+          item.productId,
+          item.productName,
+          item.basePrice,
+          item.quantity,
+          item.note.trim()
+        )
+        const itemId = Number((itemResult as { lastInsertRowid: number }).lastInsertRowid)
+
+        for (const ri of item.removedIngredients) {
+          insertRemoved.run(itemId, ri.id, ri.name)
+        }
+        for (const ei of item.extraIngredients) {
+          insertExtra.run(itemId, ei.id, ei.name, ei.extraCost)
+        }
+      }
+
+      return orderId
+    })
+
+    revalidatePath("/pedidos")
+    return { success: true, orderId }
+  } catch (e) {
+    console.error("[createOrder]", e)
+    return { error: "Error al guardar el pedido. Intenta de nuevo." }
   }
-
-  revalidatePath("/pedidos")
-  return { success: true, orderId }
 }
 
 export async function getOrders(): Promise<Order[]> {
-  // Automatic cleanup of orders older than 30 days
-  await dbRun("DELETE FROM orders WHERE created_at < datetime('now', '-30 days')")
+  try {
+    return await dbTransaction((database: Database.Database) => {
+      try {
+        database.prepare("DELETE FROM orders WHERE created_at < datetime('now', '-30 days')").run()
+      } catch (e) {
+        console.error("[getOrders] Limpieza automática:", e)
+      }
 
-  const orders = await dbAll<Order>("SELECT * FROM orders ORDER BY created_at DESC")
+      const orders = database.prepare("SELECT * FROM orders ORDER BY created_at DESC").all() as Order[]
 
-  if (orders.length === 0) return []
+      if (orders.length === 0) return []
 
-  const orderIds = orders.map((o) => o.id)
-  const orderPlaceholders = orderIds.map(() => "?").join(", ")
+      const orderIds = orders.map((o) => o.id)
+      const orderPlaceholders = orderIds.map(() => "?").join(", ")
 
-  const items = await dbAll<Record<string, unknown>>(
-    `SELECT * FROM order_items WHERE order_id IN (${orderPlaceholders}) ORDER BY id ASC`,
-    orderIds
-  )
+      const items = database
+        .prepare(
+          `SELECT * FROM order_items WHERE order_id IN (${orderPlaceholders}) ORDER BY id ASC`
+        )
+        .all(...orderIds) as Record<string, unknown>[]
 
-  const itemIds = items.map((i) => i.id as number)
+      const itemIds = items.map((i) => i.id as number)
 
-  let removedIngs: Record<string, unknown>[] = []
-  let extraIngs: Record<string, unknown>[] = []
+      let removedIngs: Record<string, unknown>[] = []
+      let extraIngs: Record<string, unknown>[] = []
 
-  if (itemIds.length > 0) {
-    const itemPlaceholders = itemIds.map(() => "?").join(", ")
-    removedIngs = await dbAll<Record<string, unknown>>(
-      `SELECT * FROM order_item_removed_ingredients WHERE order_item_id IN (${itemPlaceholders})`,
-      itemIds
-    )
-    extraIngs = await dbAll<Record<string, unknown>>(
-      `SELECT * FROM order_item_extra_ingredients WHERE order_item_id IN (${itemPlaceholders})`,
-      itemIds
-    )
+      if (itemIds.length > 0) {
+        const itemPlaceholders = itemIds.map(() => "?").join(", ")
+        removedIngs = database
+          .prepare(
+            `SELECT * FROM order_item_removed_ingredients WHERE order_item_id IN (${itemPlaceholders})`
+          )
+          .all(...itemIds) as Record<string, unknown>[]
+        extraIngs = database
+          .prepare(
+            `SELECT * FROM order_item_extra_ingredients WHERE order_item_id IN (${itemPlaceholders})`
+          )
+          .all(...itemIds) as Record<string, unknown>[]
+      }
+
+      return orders.map((order) => ({
+        ...order,
+        items: items
+          .filter((i) => i.order_id === order.id)
+          .map((i) => ({
+            id: i.id as number,
+            order_id: i.order_id as number,
+            product_id: i.product_id as number | null,
+            product_name_snapshot: i.product_name_snapshot as string,
+            base_price_snapshot: Number(i.base_price_snapshot) || 0,
+            quantity: i.quantity as number,
+            note: (i.note as string) || "",
+            removed_ingredients: removedIngs
+              .filter((r) => r.order_item_id === i.id)
+              .map((r) => ({
+                id: r.id as number,
+                ingredient_name_snapshot: r.ingredient_name_snapshot as string,
+              })),
+            extra_ingredients: extraIngs
+              .filter((e) => e.order_item_id === i.id)
+              .map((e) => ({
+                id: e.id as number,
+                ingredient_name_snapshot: e.ingredient_name_snapshot as string,
+                extra_cost_snapshot: Number(e.extra_cost_snapshot) || 0,
+              })),
+          })),
+      }))
+    })
+  } catch (e) {
+    console.error("[getOrders]", e)
+    return []
   }
-
-  return orders.map((order) => ({
-    ...order,
-    items: items
-      .filter((i) => i.order_id === order.id)
-      .map((i) => ({
-        id: i.id as number,
-        order_id: i.order_id as number,
-        product_id: i.product_id as number | null,
-        product_name_snapshot: i.product_name_snapshot as string,
-        base_price_snapshot: i.base_price_snapshot as string,
-        quantity: i.quantity as number,
-        note: (i.note as string) || "",
-        removed_ingredients: removedIngs
-          .filter((r) => r.order_item_id === i.id)
-          .map((r) => ({
-            id: r.id as number,
-            ingredient_name_snapshot: r.ingredient_name_snapshot as string,
-          })),
-        extra_ingredients: extraIngs
-          .filter((e) => e.order_item_id === i.id)
-          .map((e) => ({
-            id: e.id as number,
-            ingredient_name_snapshot: e.ingredient_name_snapshot as string,
-            extra_cost_snapshot: e.extra_cost_snapshot as string,
-          })),
-      })),
-  }))
 }
 
 export async function toggleDelivered(orderId: number, delivered: boolean) {
-  await dbRun(
-    "UPDATE orders SET status_delivered = ? WHERE id = ?",
-    [delivered ? 1 : 0, orderId]
-  )
-  revalidatePath("/pedidos")
-  return { success: true }
+  try {
+    const { changes } = await dbRunReturn(
+      "UPDATE orders SET status_delivered = ? WHERE id = ?",
+      [delivered ? 1 : 0, orderId]
+    )
+    revalidatePath("/pedidos")
+    if (changes === 0) return { error: "Pedido no encontrado" }
+    return { success: true }
+  } catch (e) {
+    console.error("[toggleDelivered]", e)
+    return { error: "Error al actualizar el pedido." }
+  }
 }
 
 export async function deleteOrder(id: number) {
-  await dbRun("DELETE FROM orders WHERE id = ?", [id])
-  revalidatePath("/pedidos")
-  return { success: true }
+  try {
+    const { changes } = await dbRunReturn("DELETE FROM orders WHERE id = ?", [id])
+    revalidatePath("/pedidos")
+    if (changes === 0) return { error: "Pedido no encontrado" }
+    return { success: true }
+  } catch (e) {
+    console.error("[deleteOrder]", e)
+    return { error: "Error al eliminar el pedido." }
+  }
 }

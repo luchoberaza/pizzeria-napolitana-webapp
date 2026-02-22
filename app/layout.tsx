@@ -12,7 +12,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Pizzeria Napolitana",
-  description: "Sistema de gestion para pizzeria napolitana artesanal",
+  description: "Sistema de gestión para pizzeria napolitana artesanal",
 }
 
 export const viewport: Viewport = {

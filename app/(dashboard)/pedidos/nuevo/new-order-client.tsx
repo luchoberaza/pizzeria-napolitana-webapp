@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useRef, useCallback } from "react"
+import { useState, useTransition, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   Plus,
@@ -64,13 +64,28 @@ export function NewOrderClient({
 
   // Saved order for print
   const [savedOrderId, setSavedOrderId] = useState<number | null>(null)
+  const [printOrderId, setPrintOrderId] = useState<number | null>(null)
+
+  // Fire print AFTER React has committed KitchenTicket to the DOM.
+  // useEffect runs post-commit, so the element is guaranteed to exist.
+  // Navigate only after the user closes the print dialog (afterprint event).
+  useEffect(() => {
+    if (printOrderId === null) return
+    const onAfterPrint = () => {
+      toast.success(`Pedido #${printOrderId} creado exitosamente`)
+      router.push("/pedidos")
+    }
+    window.addEventListener("afterprint", onAfterPrint, { once: true })
+    window.print()
+    return () => window.removeEventListener("afterprint", onAfterPrint)
+  }, [printOrderId, router])
 
   function addProduct(product: Product) {
     const newItem: CartItem = {
       id: crypto.randomUUID(),
       productId: product.id,
       productName: product.name,
-      basePrice: parseFloat(product.price),
+      basePrice: parseFloat(product.price) || 0,
       quantity: 1,
       note: "",
       baseIngredients: product.ingredients.map((i) => ({
@@ -149,13 +164,8 @@ export function NewOrderClient({
 
       if (result.orderId) {
         setSavedOrderId(result.orderId)
-
-        // Wait for print template to render
-        setTimeout(() => {
-          window.print()
-          toast.success(`Pedido #${result.orderId} creado exitosamente`)
-          router.push("/pedidos")
-        }, 300)
+        // Trigger print via useEffect (fires after KitchenTicket renders in DOM)
+        setPrintOrderId(result.orderId)
       }
     })
   }, [cart, address, floorApt, reference, discount, discountReason, router])
@@ -246,9 +256,9 @@ export function NewOrderClient({
                           )}
                           {item.extraIngredients.length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
-                              {item.extraIngredients.map((e) => (
+                              {item.extraIngredients.map((e, idx) => (
                                 <Badge
-                                  key={e.id}
+                                  key={`extra-${e.id}-${idx}`}
                                   variant="secondary"
                                   className="text-xs"
                                 >

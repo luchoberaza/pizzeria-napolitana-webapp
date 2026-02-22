@@ -5,17 +5,17 @@ import { es } from "date-fns/locale"
 import type { Order } from "@/app/(dashboard)/pedidos/actions"
 
 export function CustomerInvoice({ order }: { order: Order }) {
-  const discount = parseFloat(order.discount_amount)
+  const discount = Number(order.discount_amount) || 0
+  const total = Number(order.total_snapshot) || 0
 
   const subtotal = order.items.reduce((sum, item) => {
     const extras = item.extra_ingredients.reduce(
-      (s, e) => s + parseFloat(e.extra_cost_snapshot),
+      (s, e) => s + (Number(e.extra_cost_snapshot) || 0),
       0
     )
-    return sum + (parseFloat(item.base_price_snapshot) + extras) * item.quantity
+    const base = Number(item.base_price_snapshot) || 0
+    return sum + (base + extras) * item.quantity
   }, 0)
-
-  const total = Math.max(0, subtotal - discount)
 
   return (
     <div className="print-only mx-auto w-full max-w-[210mm] bg-white p-8 font-sans text-black print:max-w-none print:p-0">
@@ -67,11 +67,11 @@ export function CustomerInvoice({ order }: { order: Order }) {
           <tbody>
             {order.items.map((item) => {
               const extras = item.extra_ingredients.reduce(
-                (s, e) => s + parseFloat(e.extra_cost_snapshot),
+                (s, e) => s + (Number(e.extra_cost_snapshot) || 0),
                 0
               )
-              const itemTotal =
-                (parseFloat(item.base_price_snapshot) + extras) * item.quantity
+              const base = Number(item.base_price_snapshot) || 0
+              const itemTotal = (base + extras) * item.quantity
 
               return (
                 <tr key={item.id} className="border-b border-gray-100">
@@ -87,13 +87,13 @@ export function CustomerInvoice({ order }: { order: Order }) {
                           .join(", ")}
                       </p>
                     )}
-                    {item.extra_ingredients.length > 0 && (
+                        {item.extra_ingredients.length > 0 && (
                       <p className="text-xs text-gray-500">
                         Extra:{" "}
                         {item.extra_ingredients
                           .map(
                             (e) =>
-                              `${e.ingredient_name_snapshot} (+$${parseFloat(e.extra_cost_snapshot).toFixed(2)})`
+                              `${e.ingredient_name_snapshot} (+$${(Number(e.extra_cost_snapshot) || 0).toFixed(2)})`
                           )
                           .join(", ")}
                       </p>
@@ -106,7 +106,7 @@ export function CustomerInvoice({ order }: { order: Order }) {
                   </td>
                   <td className="py-3 text-center text-sm">{item.quantity}</td>
                   <td className="py-3 text-right text-sm">
-                    ${(parseFloat(item.base_price_snapshot) + extras).toFixed(2)}
+                    ${((Number(item.base_price_snapshot) || 0) + extras).toFixed(2)}
                   </td>
                   <td className="py-3 text-right text-sm font-medium">
                     ${itemTotal.toFixed(2)}

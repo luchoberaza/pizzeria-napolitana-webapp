@@ -74,7 +74,7 @@ export function ProductsClient({
   function openEdit(product: Product) {
     setEditing(product)
     setFormName(product.name)
-    setFormPrice(parseFloat(product.price).toFixed(2))
+    setFormPrice((parseFloat(product.price) || 0).toFixed(2))
     setSelectedIngredients(product.ingredients.map((i) => i.id))
     setIngredientSearch("")
     setDialogOpen(true)
@@ -116,10 +116,14 @@ export function ProductsClient({
   async function handleDelete() {
     if (!deleting) return
     startTransition(async () => {
-      await deleteProduct(deleting.id)
-      toast.success("Producto eliminado")
-      setDeleteDialogOpen(false)
-      setDeleting(null)
+      const result = await deleteProduct(deleting.id)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Producto eliminado")
+        setDeleteDialogOpen(false)
+        setDeleting(null)
+      }
     })
   }
 
@@ -164,7 +168,7 @@ export function ProductsClient({
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {search
-              ? "No se encontraron productos con esa busqueda"
+              ? "No se encontraron productos con esa búsqueda"
               : "Agrega tu primer producto para comenzar"}
           </p>
         </div>
