@@ -12,6 +12,7 @@ import {
   MapPin,
   Trash2,
   CalendarDays,
+  Eye,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { type Order, toggleDelivered, deleteOrder } from "@/app/(dashboard)/pedidos/actions"
 import { CustomerInvoice } from "@/components/customer-invoice"
+import { OrderDetailSheet } from "@/components/order-detail-sheet"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +40,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
   const [isPending, startTransition] = useTransition()
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null)
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null)
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
 
   const filtered = orders.filter((order) => {
@@ -324,6 +327,15 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => setDetailOrder(order)}
+                              className="h-8"
+                            >
+                              <Eye className="mr-1 h-3.5 w-3.5" />
+                              Detalles
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handlePrint(order)}
                               className="h-8"
                             >
@@ -350,6 +362,13 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
           ))}
         </div>
       )}
+
+      {/* Order Detail Sheet */}
+      <OrderDetailSheet
+        order={detailOrder}
+        open={detailOrder !== null}
+        onOpenChange={(open) => { if (!open) setDetailOrder(null) }}
+      />
 
       {/* Print template */}
       <div ref={printRef}>

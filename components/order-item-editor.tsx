@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { X, Search, Minus, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,12 +43,13 @@ export function OrderItemEditor({
   const [editItem, setEditItem] = useState<CartItem>(item)
   const [extraSearch, setExtraSearch] = useState("")
 
-  // Reset state when opened with new item
+  // Sync local state whenever the item being edited changes
+  useEffect(() => {
+    setEditItem(item)
+    setExtraSearch("")
+  }, [item.id])
+
   const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) {
-      setEditItem(item)
-      setExtraSearch("")
-    }
     onOpenChange(isOpen)
   }
 

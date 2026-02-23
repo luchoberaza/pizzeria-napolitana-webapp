@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Printer,
   Tag,
+  Search,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -50,8 +51,10 @@ export function NewOrderClient({
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
-  const [editingItem, setEditingItem] = useState<CartItem | null>(null)
-  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [productSearch, setProductSearch] = useState("")
+
+  const editingItem = editingItemId ? cart.find((i) => i.id === editingItemId) ?? null : null
 
   // Address
   const [address, setAddress] = useState("")
@@ -186,12 +189,27 @@ export function NewOrderClient({
         <div className="lg:col-span-3 space-y-6">
           {/* Product selector */}
           <section className="glass rounded-xl p-5 shadow-sm">
-            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              <ShoppingCart className="h-4 w-4" />
-              Productos
-            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="flex shrink-0 items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <ShoppingCart className="h-4 w-4" />
+                Productos
+              </h2>
+              <div className="relative w-40 sm:w-52">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="h-7 pl-8 text-xs"
+                />
+              </div>
+            </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {products.map((product) => (
+              {products
+                .filter((p) =>
+                  p.name.toLowerCase().includes(productSearch.toLowerCase())
+                )
+                .map((product) => (
                 <button
                   key={product.id}
                   type="button"
@@ -218,6 +236,14 @@ export function NewOrderClient({
                   No hay productos. Crea productos primero.
                 </p>
               )}
+              {products.length > 0 &&
+                products.filter((p) =>
+                  p.name.toLowerCase().includes(productSearch.toLowerCase())
+                ).length === 0 && (
+                  <p className="col-span-2 py-4 text-center text-sm text-muted-foreground">
+                    Sin resultados para &ldquo;{productSearch}&rdquo;
+                  </p>
+                )}
             </div>
           </section>
 
@@ -303,10 +329,7 @@ export function NewOrderClient({
                         <div className="flex gap-1">
                           <button
                             type="button"
-                            onClick={() => {
-                              setEditingItem(item)
-                              setEditorOpen(true)
-                            }}
+                            onClick={() => setEditingItemId(item.id)}
                             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             aria-label="Editar item"
                           >
@@ -450,10 +473,11 @@ export function NewOrderClient({
       {/* Item Editor Sheet */}
       {editingItem && (
         <OrderItemEditor
+          key={editingItem.id}
           item={editingItem}
           allIngredients={allIngredients}
-          open={editorOpen}
-          onOpenChange={setEditorOpen}
+          open={editingItemId !== null}
+          onOpenChange={(open) => { if (!open) setEditingItemId(null) }}
           onSave={updateCartItem}
         />
       )}
