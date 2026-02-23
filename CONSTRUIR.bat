@@ -10,17 +10,17 @@ echo  ============================================
 echo.
 
 rem ── 1. Verificar Node.js ─────────────────────────────────────────────────────
-where node >nul 2>&1
+node --version >nul 2>&1
 if errorlevel 1 (
-    echo  [ERROR] Node.js no esta instalado.
+    echo  [ERROR] Node.js no esta instalado o no esta en el PATH.
     echo.
     echo  Descargalo desde: https://nodejs.org  (version LTS recomendada)
-    echo  Una vez instalado, vuelve a ejecutar este archivo.
+    echo  Luego REINICIA la computadora y vuelve a ejecutar este archivo.
     echo.
     pause
     exit /b 1
 )
-for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
+for /f "tokens=*" %%v in ('node --version') do set NODE_VER=%%v
 echo  [OK] Node.js %NODE_VER% detectado.
 echo.
 
