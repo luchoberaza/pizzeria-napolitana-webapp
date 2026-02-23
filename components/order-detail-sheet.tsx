@@ -51,7 +51,7 @@ export function OrderDetailSheet({
             <CalendarDays className="h-4 w-4 shrink-0 text-napoli-orange" />
             <span>
               {format(
-                new Date(order.created_at),
+                new Date(order.created_at.replace(' ', 'T') + 'Z'),
                 "d 'de' MMMM yyyy, HH:mm",
                 { locale: es }
               )}

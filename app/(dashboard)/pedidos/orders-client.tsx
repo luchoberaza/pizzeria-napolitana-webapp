@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition, useRef } from "react"
-import { format, isToday, isTomorrow, getYear } from "date-fns"
+import { format, isToday, isYesterday, getYear } from "date-fns"
 import { es } from "date-fns/locale"
 import {
   Search,
@@ -44,7 +44,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
   const printRef = useRef<HTMLDivElement>(null)
 
   const filtered = orders.filter((order) => {
-    const orderDate = new Date(order.created_at)
+    const orderDate = new Date(order.created_at.replace(' ', 'T') + 'Z')
     const formattedDate = format(orderDate, "d 'de' MMMM yyyy", { locale: es }).toLowerCase()
 
     const matchesSearch =
@@ -66,13 +66,13 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
   const currentYear = getYear(new Date())
 
   const groups = filtered.reduce((acc, order) => {
-    const date = new Date(order.created_at)
+    const date = new Date(order.created_at.replace(' ', 'T') + 'Z')
     let title = ""
 
     if (isToday(date)) {
       title = "Hoy"
-    } else if (isTomorrow(date)) {
-      title = "Mañana"
+    } else if (isYesterday(date)) {
+      title = "Ayer"
     } else {
       const orderYear = getYear(date)
       if (orderYear !== currentYear) {
@@ -261,7 +261,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {format(
-                                new Date(order.created_at),
+                                new Date(order.created_at.replace(' ', 'T') + 'Z'),
                                 "HH:mm",
                                 { locale: es }
                               )}
