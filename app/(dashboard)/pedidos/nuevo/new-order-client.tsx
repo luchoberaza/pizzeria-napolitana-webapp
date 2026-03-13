@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useRef, useCallback, useEffect } from "react"
+import { useState, useTransition, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   Plus,
@@ -25,6 +25,8 @@ import type { Ingredient } from "../../ingredientes/actions"
 import { createOrder, type OrderItem } from "@/app/(dashboard)/pedidos/actions"
 import { OrderItemEditor } from "@/components/order-item-editor"
 import { KitchenTicket } from "@/components/kitchen-ticket"
+import { printElementAsImage } from "@/lib/print-image"
+import { cn, formatQty } from "@/lib/utils"
 
 type CartItem = {
   id: string
@@ -64,24 +66,10 @@ export function NewOrderClient({
   // Discount
   const [discountAmount, setDiscountAmount] = useState("")
   const [discountReason, setDiscountReason] = useState("")
+  const [discountMode, setDiscountMode] = useState<"fixed" | "percent">("fixed")
 
   // Saved order for print
   const [savedOrderId, setSavedOrderId] = useState<number | null>(null)
-  const [printOrderId, setPrintOrderId] = useState<number | null>(null)
-
-  // Fire print AFTER React has committed KitchenTicket to the DOM.
-  // useEffect runs post-commit, so the element is guaranteed to exist.
-  // Navigate only after the user closes the print dialog (afterprint event).
-  useEffect(() => {
-    if (printOrderId === null) return
-    const onAfterPrint = () => {
-      toast.success(`Pedido #${printOrderId} creado exitosamente`)
-      router.push("/pedidos")
-    }
-    window.addEventListener("afterprint", onAfterPrint, { once: true })
-    window.print()
-    return () => window.removeEventListener("afterprint", onAfterPrint)
-  }, [printOrderId, router])
 
   function addProduct(product: Product) {
     const newItem: CartItem = {
@@ -115,8 +103,13 @@ export function NewOrderClient({
     setCart((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item
-        const newQty = Math.max(1, item.quantity + delta)
-        return { ...item, quantity: newQty }
+        let newQty: number
+        if (delta > 0) {
+          newQty = item.quantity < 1 ? 1 : item.quantity + 1
+        } else {
+          newQty = item.quantity <= 1 ? 0.5 : item.quantity - 1
+        }
+        return { ...item, quantity: Math.max(0.5, newQty) }
       })
     )
   }
@@ -126,7 +119,11 @@ export function NewOrderClient({
     const extras = item.extraIngredients.reduce((s, e) => s + e.extraCost, 0)
     return sum + (item.basePrice + extras) * item.quantity
   }, 0)
-  const discount = parseFloat(discountAmount) || 0
+  const discountValue = parseFloat(discountAmount) || 0
+  const discount =
+    discountMode === "percent"
+      ? (subtotal * Math.min(discountValue, 100)) / 100
+      : discountValue
   const total = Math.max(0, subtotal - discount)
 
   const handleSubmit = useCallback(async () => {
@@ -167,8 +164,17 @@ export function NewOrderClient({
 
       if (result.orderId) {
         setSavedOrderId(result.orderId)
-        // Trigger print via useEffect (fires after KitchenTicket renders in DOM)
-        setPrintOrderId(result.orderId)
+        // Wait a tick for React to render the KitchenTicket into the DOM
+        await new Promise((r) => setTimeout(r, 200))
+        try {
+          if (printRef.current) {
+            await printElementAsImage(printRef.current, { width: 302 }) // 80mm ≈ 302px at 96dpi
+          }
+        } catch (e) {
+          console.error("[print]", e)
+        }
+        toast.success(`Pedido #${result.orderId} creado exitosamente`)
+        router.push("/pedidos")
       }
     })
   }, [cart, address, floorApt, reference, discount, discountReason, router])
@@ -309,13 +315,13 @@ export function NewOrderClient({
                             type="button"
                             onClick={() => changeQuantity(item.id, -1)}
                             className="flex h-7 w-7 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-secondary"
-                            disabled={item.quantity <= 1}
+                            disabled={item.quantity <= 0.5}
                             aria-label="Disminuir cantidad"
                           >
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="w-6 text-center text-sm font-medium text-foreground">
-                            {item.quantity}
+                            {formatQty(item.quantity)}
                           </span>
                           <button
                             type="button"
@@ -401,20 +407,59 @@ export function NewOrderClient({
               Descuento
             </h2>
             <div className="mt-3 space-y-3">
+              {/* Mode toggle */}
+              <div className="flex gap-1 rounded-lg border p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDiscountMode("fixed")
+                    setDiscountAmount("")
+                  }}
+                  className={cn(
+                    "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    discountMode === "fixed"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  $
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDiscountMode("percent")
+                    setDiscountAmount("")
+                  }}
+                  className={cn(
+                    "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    discountMode === "percent"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  %
+                </button>
+              </div>
               <div>
                 <Label htmlFor="discount" className="text-xs text-foreground">
-                  Monto ($)
+                  {discountMode === "fixed" ? "Monto ($)" : "Porcentaje (%)"}
                 </Label>
                 <Input
                   id="discount"
                   type="number"
                   min="0"
-                  step="0.01"
+                  max={discountMode === "percent" ? "100" : undefined}
+                  step={discountMode === "percent" ? "1" : "0.01"}
                   value={discountAmount}
                   onChange={(e) => setDiscountAmount(e.target.value)}
-                  placeholder="0.00"
+                  placeholder={discountMode === "fixed" ? "0.00" : "0"}
                 />
               </div>
+              {discountMode === "percent" && discount > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Descuento: -${discount.toFixed(2)}
+                </p>
+              )}
               <div>
                 <Label htmlFor="discount-reason" className="text-xs text-foreground">
                   Motivo (opcional)
@@ -441,7 +486,12 @@ export function NewOrderClient({
               </div>
               {discount > 0 && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-napoli-green">Descuento</span>
+                  <span className="text-napoli-green">
+                    Descuento
+                    {discountMode === "percent" && (
+                      <span className="ml-1 text-xs">({discountValue}%)</span>
+                    )}
+                  </span>
                   <span className="font-medium text-napoli-green">
                     -${discount.toFixed(2)}
                   </span>

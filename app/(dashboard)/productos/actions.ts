@@ -7,6 +7,7 @@ export type Product = {
   id: number
   name: string
   price: string
+  category: string
   created_at: string
   updated_at: string
   ingredients: { id: number; name: string; extra_cost: string }[]
@@ -16,6 +17,7 @@ export type ProductRow = {
   id: number
   name: string
   price: string
+  category: string
   created_at: string
   updated_at: string
 }
@@ -64,14 +66,15 @@ export async function createProduct(data: {
   name: string
   price: number
   ingredientIds: number[]
+  category?: string
 }) {
   try {
     if (!data.name.trim()) return { error: "El nombre es requerido" }
     if (data.price < 0) return { error: "El precio no puede ser negativo" }
 
     const { lastInsertRowid: productId } = await dbRunReturn(
-      "INSERT INTO products (name, price) VALUES (?, ?)",
-      [data.name.trim(), data.price]
+      "INSERT INTO products (name, price, category) VALUES (?, ?, ?)",
+      [data.name.trim(), data.price, data.category || ""]
     )
 
     for (const ingredientId of data.ingredientIds) {
@@ -95,14 +98,15 @@ export async function updateProduct(data: {
   name: string
   price: number
   ingredientIds: number[]
+  category?: string
 }) {
   try {
     if (!data.name.trim()) return { error: "El nombre es requerido" }
     if (data.price < 0) return { error: "El precio no puede ser negativo" }
 
     const { changes } = await dbRunReturn(
-      "UPDATE products SET name = ?, price = ?, updated_at = datetime('now') WHERE id = ?",
-      [data.name.trim(), data.price, data.id]
+      "UPDATE products SET name = ?, price = ?, category = ?, updated_at = datetime('now') WHERE id = ?",
+      [data.name.trim(), data.price, data.category || "", data.id]
     )
     if (changes === 0) return { error: "Producto no encontrado" }
 

@@ -14,6 +14,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import type { Ingredient } from "@/app/(dashboard)/ingredientes/actions"
+import { formatQty } from "@/lib/utils"
 
 type CartItem = {
   id: string
@@ -117,17 +118,17 @@ export function OrderItemEditor({
                 size="icon"
                 className="h-9 w-9 bg-transparent"
                 onClick={() =>
-                  setEditItem((p) => ({
-                    ...p,
-                    quantity: Math.max(1, p.quantity - 1),
-                  }))
+                  setEditItem((p) => {
+                    const newQty = p.quantity <= 1 ? 0.5 : p.quantity - 1
+                    return { ...p, quantity: Math.max(0.5, newQty) }
+                  })
                 }
-                disabled={editItem.quantity <= 1}
+                disabled={editItem.quantity <= 0.5}
               >
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="w-8 text-center text-lg font-semibold text-foreground">
-                {editItem.quantity}
+                {formatQty(editItem.quantity)}
               </span>
               <Button
                 type="button"
@@ -135,7 +136,10 @@ export function OrderItemEditor({
                 size="icon"
                 className="h-9 w-9 bg-transparent"
                 onClick={() =>
-                  setEditItem((p) => ({ ...p, quantity: p.quantity + 1 }))
+                  setEditItem((p) => {
+                    const newQty = p.quantity < 1 ? 1 : p.quantity + 1
+                    return { ...p, quantity: newQty }
+                  })
                 }
               >
                 <Plus className="h-4 w-4" />

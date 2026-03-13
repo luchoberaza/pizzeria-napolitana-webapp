@@ -3,6 +3,7 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Order } from "@/app/(dashboard)/pedidos/actions"
+import { formatQty } from "@/lib/utils"
 
 export function CustomerInvoice({ order }: { order: Order }) {
   const discount = Number(order.discount_amount) || 0
@@ -104,7 +105,7 @@ export function CustomerInvoice({ order }: { order: Order }) {
                       </p>
                     )}
                   </td>
-                  <td className="py-3 text-center text-sm">{item.quantity}</td>
+                  <td className="py-3 text-center text-sm">{formatQty(item.quantity)}</td>
                   <td className="py-3 text-right text-sm">
                     ${((Number(item.base_price_snapshot) || 0) + extras).toFixed(2)}
                   </td>

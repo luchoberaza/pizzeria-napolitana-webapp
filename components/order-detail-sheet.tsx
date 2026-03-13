@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Order } from "@/app/(dashboard)/pedidos/actions"
+import { formatQty } from "@/lib/utils"
 
 export function OrderDetailSheet({
   order,
@@ -105,7 +106,7 @@ export function OrderDetailSheet({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-sm font-semibold text-foreground">
-                        {item.quantity}x {item.product_name_snapshot}
+                        {formatQty(item.quantity)}x {item.product_name_snapshot}
                       </span>
                       <span className="shrink-0 text-sm font-bold text-foreground">
                         ${itemTotal.toFixed(2)}

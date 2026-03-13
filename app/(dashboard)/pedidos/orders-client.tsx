@@ -14,7 +14,7 @@ import {
   CalendarDays,
   Eye,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatQty } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { type Order, toggleDelivered, deleteOrder } from "@/app/(dashboard)/pedidos/actions"
 import { CustomerInvoice } from "@/components/customer-invoice"
+import { printElementAsImage } from "@/lib/print-image"
 import { OrderDetailSheet } from "@/components/order-detail-sheet"
 import {
   AlertDialog,
@@ -108,11 +109,18 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
     })
   }
 
-  function handlePrint(order: Order) {
+  async function handlePrint(order: Order) {
     setPrintingOrder(order)
-    setTimeout(() => {
-      window.print()
-    }, 300)
+    // Wait for React to render the CustomerInvoice into the DOM
+    await new Promise((r) => setTimeout(r, 300))
+    try {
+      if (printRef.current) {
+        await printElementAsImage(printRef.current)
+      }
+    } catch (e) {
+      console.error("[print]", e)
+      toast.error("Error al imprimir la factura")
+    }
   }
 
   function handleDelete() {
@@ -286,7 +294,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                                 variant="outline"
                                 className="text-xs font-normal text-foreground"
                               >
-                                {item.quantity}x {item.product_name_snapshot}
+                                {formatQty(item.quantity)}x {item.product_name_snapshot}
                               </Badge>
                             ))}
                           </div>

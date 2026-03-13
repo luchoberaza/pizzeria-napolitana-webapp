@@ -29,6 +29,15 @@ const schema = fs.readFileSync(
 )
 
 db.exec(schema)
+
+// Migrations for existing databases
+// Add category column to products if it doesn't exist
+const productColumns = db.pragma("table_info(products)").map(c => c.name)
+if (!productColumns.includes("category")) {
+    db.exec("ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT ''")
+    console.log("  → Added 'category' column to products")
+}
+
 db.close()
 
 console.log("✅ SQLite DB initialized:", dbPath)

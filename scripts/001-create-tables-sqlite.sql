@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   price REAL NOT NULL,
+  category TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -42,7 +43,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   product_id INTEGER,
   product_name_snapshot TEXT NOT NULL,
   base_price_snapshot REAL NOT NULL,
-  quantity INTEGER NOT NULL DEFAULT 1,
+  quantity REAL NOT NULL DEFAULT 1,
   note TEXT DEFAULT '',
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL

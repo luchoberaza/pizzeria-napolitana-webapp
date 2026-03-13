@@ -2,6 +2,7 @@
 
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { formatQty } from "@/lib/utils"
 
 type TicketItem = {
   productName: string
@@ -52,7 +53,7 @@ export function KitchenTicket({
             className={`${idx > 0 ? "mt-3 border-t border-dashed border-gray-400 pt-3" : ""}`}
           >
             <p className="text-base font-bold">
-              {item.quantity}x {item.productName}
+              {formatQty(item.quantity)}x {item.productName}
             </p>
             {item.removedIngredients.length > 0 && (
               <p className="ml-2 text-sm font-bold">

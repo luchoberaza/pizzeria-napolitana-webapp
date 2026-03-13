@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import type { Ingredient } from "../ingredientes/actions"
 import {
@@ -51,6 +52,7 @@ export function ProductsClient({
   // Form state
   const [formName, setFormName] = useState("")
   const [formPrice, setFormPrice] = useState("")
+  const [formIsPizza, setFormIsPizza] = useState(false)
   const [selectedIngredients, setSelectedIngredients] = useState<number[]>([])
   const [ingredientSearch, setIngredientSearch] = useState("")
 
@@ -66,6 +68,7 @@ export function ProductsClient({
     setEditing(null)
     setFormName("")
     setFormPrice("")
+    setFormIsPizza(false)
     setSelectedIngredients([])
     setIngredientSearch("")
     setDialogOpen(true)
@@ -75,6 +78,7 @@ export function ProductsClient({
     setEditing(product)
     setFormName(product.name)
     setFormPrice((parseFloat(product.price) || 0).toFixed(2))
+    setFormIsPizza(product.category === "pizza")
     setSelectedIngredients(product.ingredients.map((i) => i.id))
     setIngredientSearch("")
     setDialogOpen(true)
@@ -98,6 +102,7 @@ export function ProductsClient({
         name: formName,
         price: parseFloat(formPrice) || 0,
         ingredientIds: selectedIngredients,
+        category: formIsPizza ? "pizza" : "",
       }
 
       const result = editing
@@ -181,9 +186,16 @@ export function ProductsClient({
             >
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-semibold text-foreground">
-                    {product.name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-foreground">
+                      {product.name}
+                    </h3>
+                    {product.category === "pizza" && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        Pizza
+                      </Badge>
+                    )}
+                  </div>
                   <p className="mt-1 text-xl font-bold text-napoli-orange">
                     ${parseFloat(product.price).toFixed(2)}
                   </p>
@@ -257,6 +269,16 @@ export function ProductsClient({
                   placeholder="0.00"
                   required
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="product-is-pizza"
+                  checked={formIsPizza}
+                  onCheckedChange={(checked) => setFormIsPizza(checked === true)}
+                />
+                <Label htmlFor="product-is-pizza" className="text-sm font-normal cursor-pointer">
+                  Es pizza (permite cantidad ½)
+                </Label>
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Ingredientes Base</Label>
