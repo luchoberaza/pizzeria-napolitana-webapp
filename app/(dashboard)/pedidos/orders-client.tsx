@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useRef } from "react"
+import { useState, useTransition } from "react"
 import { format, isToday, isYesterday, getYear } from "date-fns"
 import { es } from "date-fns/locale"
 import {
@@ -22,7 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { type Order, toggleDelivered, deleteOrder } from "@/app/(dashboard)/pedidos/actions"
 import { CustomerInvoice } from "@/components/customer-invoice"
-import { printElementAsImage } from "@/lib/print-image"
+import { printReceipt } from "@/lib/print-image"
 import { OrderDetailSheet } from "@/components/order-detail-sheet"
 import {
   AlertDialog,
@@ -42,7 +42,6 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null)
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null)
   const [detailOrder, setDetailOrder] = useState<Order | null>(null)
-  const printRef = useRef<HTMLDivElement>(null)
 
   const filtered = orders.filter((order) => {
     const orderDate = new Date(order.created_at.replace(' ', 'T') + 'Z')
@@ -114,9 +113,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
     // Wait for React to render the CustomerInvoice into the DOM
     await new Promise((r) => setTimeout(r, 300))
     try {
-      if (printRef.current) {
-        await printElementAsImage(printRef.current)
-      }
+      printReceipt()
     } catch (e) {
       console.error("[print]", e)
       toast.error("Error al imprimir la factura")
@@ -378,8 +375,8 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
         onOpenChange={(open) => { if (!open) setDetailOrder(null) }}
       />
 
-      {/* Print template */}
-      <div ref={printRef}>
+      {/* Print template (visible only via @media print) */}
+      <div>
         {printingOrder && <CustomerInvoice order={printingOrder} />}
       </div>
 

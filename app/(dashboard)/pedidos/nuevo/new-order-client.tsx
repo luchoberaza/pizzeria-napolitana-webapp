@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useRef, useCallback } from "react"
+import { useState, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   Plus,
@@ -25,7 +25,7 @@ import type { Ingredient } from "../../ingredientes/actions"
 import { createOrder, type OrderItem } from "@/app/(dashboard)/pedidos/actions"
 import { OrderItemEditor } from "@/components/order-item-editor"
 import { KitchenTicket } from "@/components/kitchen-ticket"
-import { printElementAsImage } from "@/lib/print-image"
+import { printReceipt } from "@/lib/print-image"
 import { cn, formatQty } from "@/lib/utils"
 
 type CartItem = {
@@ -49,7 +49,6 @@ export function NewOrderClient({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const printRef = useRef<HTMLDivElement>(null)
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
@@ -164,12 +163,10 @@ export function NewOrderClient({
 
       if (result.orderId) {
         setSavedOrderId(result.orderId)
-        // Wait a tick for React to render the KitchenTicket into the DOM
+        // Wait for React to render the KitchenTicket into the DOM
         await new Promise((r) => setTimeout(r, 200))
         try {
-          if (printRef.current) {
-            await printElementAsImage(printRef.current, { width: 302 }) // 80mm ≈ 302px at 96dpi
-          }
+          printReceipt()
         } catch (e) {
           console.error("[print]", e)
         }
@@ -532,8 +529,8 @@ export function NewOrderClient({
         />
       )}
 
-      {/* Hidden print template */}
-      <div ref={printRef}>
+      {/* Hidden print template (visible only via @media print) */}
+      <div>
         {savedOrderId && (
           <KitchenTicket
             orderId={savedOrderId}

@@ -19,7 +19,7 @@ export function CustomerInvoice({ order }: { order: Order }) {
   }, 0)
 
   return (
-    <div className="print-only mx-auto w-full max-w-[210mm] bg-white p-8 font-sans text-black print:max-w-none print:p-0">
+    <div className="print-only mx-auto w-full max-w-[80mm] bg-white p-4 font-sans text-black print:max-w-none print:p-0">
       {/* Logo Section - Responsive and Standard Size */}
       <div className="mb-4 flex justify-center border-b border-gray-100 pb-4 text-center">
         <img
