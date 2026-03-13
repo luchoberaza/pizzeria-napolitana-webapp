@@ -23,6 +23,15 @@ export async function printElementAsImage(
   element.style.top = "0"
   element.style.visibility = "visible"
 
+  // Also unhide any .print-only children (they have display:none via CSS)
+  const printOnlyChildren = element.querySelectorAll<HTMLElement>(".print-only")
+  const childPrevStyles = Array.from(printOnlyChildren).map((child) => {
+    const s = { display: child.style.display, visibility: child.style.visibility }
+    child.style.display = "block"
+    child.style.visibility = "visible"
+    return s
+  })
+
   // Wait a tick for fonts/styles to settle
   await new Promise((r) => setTimeout(r, 100))
 
@@ -39,14 +48,19 @@ export async function printElementAsImage(
   element.style.left = prev.left
   element.style.top = prev.top
   element.style.visibility = prev.visibility
+  printOnlyChildren.forEach((child, i) => {
+    child.style.display = childPrevStyles[i].display
+    child.style.visibility = childPrevStyles[i].visibility
+  })
 
   // Print via a temporary iframe to avoid disrupting the main page
   const dataUrl = canvas.toDataURL("image/png")
   const printFrame = document.createElement("iframe")
   printFrame.style.position = "fixed"
   printFrame.style.left = "-9999px"
-  printFrame.style.width = "0"
-  printFrame.style.height = "0"
+  printFrame.style.width = "1px"
+  printFrame.style.height = "1px"
+  printFrame.style.overflow = "hidden"
   printFrame.style.border = "none"
   document.body.appendChild(printFrame)
 
