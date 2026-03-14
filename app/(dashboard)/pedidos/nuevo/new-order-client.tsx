@@ -48,11 +48,13 @@ export function NewOrderClient({
   allIngredients,
   initialPizzaCount,
   initialPizzetaCount,
+  initialMediaCount,
 }: {
   products: Product[]
   allIngredients: Ingredient[]
   initialPizzaCount: number
   initialPizzetaCount: number
+  initialMediaCount: number
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -202,6 +204,10 @@ export function NewOrderClient({
             <span className="text-sm font-bold text-napoli-orange">{initialPizzaCount}</span>
           </div>
           <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
+            <span className="text-xs font-medium text-muted-foreground">Medias hoy:</span>
+            <span className="text-sm font-bold text-napoli-orange">{initialMediaCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
             <span className="text-xs font-medium text-muted-foreground">Pizzetas hoy:</span>
             <span className="text-sm font-bold text-napoli-orange">{initialPizzetaCount}</span>
           </div>
@@ -228,7 +234,8 @@ export function NewOrderClient({
                 />
               </div>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="mt-3 max-h-[320px] overflow-y-auto rounded-lg">
+              <div className="grid gap-2 sm:grid-cols-2">
               {products
                 .filter((p) =>
                   p.name.toLowerCase().includes(productSearch.toLowerCase())
@@ -268,6 +275,7 @@ export function NewOrderClient({
                     Sin resultados para &ldquo;{productSearch}&rdquo;
                   </p>
                 )}
+              </div>
             </div>
           </section>
 

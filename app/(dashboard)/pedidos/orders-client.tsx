@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-export function OrdersClient({ orders, pizzaCount, pizzetaCount }: { orders: Order[]; pizzaCount: number; pizzetaCount: number }) {
+export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: { orders: Order[]; pizzaCount: number; pizzetaCount: number; mediaCount: number }) {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<"all" | "pending" | "delivered">("all")
   const [isPending, startTransition] = useTransition()
@@ -160,6 +160,10 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount }: { orders: Ord
               <span className="text-sm font-bold text-napoli-orange">{pizzaCount}</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 shadow-sm">
+              <span className="text-xs font-medium text-muted-foreground">Medias hoy:</span>
+              <span className="text-sm font-bold text-napoli-orange">{mediaCount}</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 shadow-sm">
               <span className="text-xs font-medium text-muted-foreground">Pizzetas hoy:</span>
               <span className="text-sm font-bold text-napoli-orange">{pizzetaCount}</span>
             </div>
@@ -235,18 +239,57 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount }: { orders: Ord
         </div>
       ) : (
         <div className="mt-6 space-y-10">
-          {groupTitles.map((title) => (
+          {groupTitles.map((title) => {
+            // Count pizzas/medias/pizzetas for this day group
+            let dayPizzas = 0
+            let dayMedias = 0
+            let dayPizzetas = 0
+            for (const order of groups[title]) {
+              for (const item of order.items) {
+                const name = item.product_name_snapshot.toLowerCase()
+                if (name.includes("pizzeta")) {
+                  dayPizzetas += item.quantity
+                } else if (name.includes("media")) {
+                  dayMedias += item.quantity
+                } else if (name.includes("pizza")) {
+                  dayPizzas += item.quantity
+                }
+              }
+            }
+
+            return (
             <div key={title} className="space-y-4">
               {/* Group Title */}
-              <div className="sticky top-0 z-10 -mx-4 flex items-center gap-2 bg-background/95 px-4 py-2 backdrop-blur-sm sm:mx-0 sm:px-0">
-                <CalendarDays className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  {title}
-                </h2>
-                <div className="h-px flex-1 bg-border/60" />
-                <Badge variant="outline" className="bg-secondary/30 font-mono text-[10px]">
-                  {groups[title].length} {groups[title].length === 1 ? 'PEDIDO' : 'PEDIDOS'}
-                </Badge>
+              <div className="sticky top-0 z-10 -mx-4 bg-background/95 px-4 py-2 backdrop-blur-sm sm:mx-0 sm:px-0">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    {title}
+                  </h2>
+                  <div className="h-px flex-1 bg-border/60" />
+                  <Badge variant="outline" className="bg-secondary/30 font-mono text-[10px]">
+                    {groups[title].length} {groups[title].length === 1 ? 'PEDIDO' : 'PEDIDOS'}
+                  </Badge>
+                </div>
+                {(dayPizzas > 0 || dayMedias > 0 || dayPizzetas > 0) && (
+                  <div className="mt-1.5 flex items-center gap-2">
+                    {dayPizzas > 0 && (
+                      <span className="text-[11px] text-muted-foreground">
+                        Pizzas: <span className="font-semibold text-napoli-orange">{dayPizzas}</span>
+                      </span>
+                    )}
+                    {dayMedias > 0 && (
+                      <span className="text-[11px] text-muted-foreground">
+                        Medias: <span className="font-semibold text-napoli-orange">{dayMedias}</span>
+                      </span>
+                    )}
+                    {dayPizzetas > 0 && (
+                      <span className="text-[11px] text-muted-foreground">
+                        Pizzetas: <span className="font-semibold text-napoli-orange">{dayPizzetas}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Group Orders */}
@@ -395,7 +438,8 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount }: { orders: Ord
                 })}
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

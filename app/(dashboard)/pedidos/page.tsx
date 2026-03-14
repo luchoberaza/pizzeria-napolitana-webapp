@@ -13,6 +13,7 @@ export default async function PedidosPage() {
       orders={orders}
       pizzaCount={pizzaCounts.pizzas}
       pizzetaCount={pizzaCounts.pizzetas}
+      mediaCount={pizzaCounts.medias}
     />
   )
 }

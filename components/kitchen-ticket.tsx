@@ -81,6 +81,7 @@ export function KitchenTicket({
           lineHeight: "1.5",
           margin: 0,
           whiteSpace: "pre",
+          color: "black",
         }}
       >
         {lines.join("\n")}

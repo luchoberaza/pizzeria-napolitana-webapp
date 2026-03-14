@@ -5,22 +5,6 @@ import { es } from "date-fns/locale"
 import type { Order } from "@/app/(dashboard)/pedidos/actions"
 import { formatQty } from "@/lib/utils"
 
-const W = 42
-
-function center(text: string): string {
-  const pad = Math.max(0, W - text.length)
-  return " ".repeat(Math.floor(pad / 2)) + text
-}
-
-function sep(char = "-"): string {
-  return char.repeat(W)
-}
-
-function leftRight(left: string, right: string): string {
-  const space = Math.max(1, W - left.length - right.length)
-  return left + " ".repeat(space) + right
-}
-
 export function CustomerInvoice({ order }: { order: Order }) {
   const discount = Number(order.discount_amount) || 0
   const total = Number(order.total_snapshot) || 0
@@ -34,118 +18,156 @@ export function CustomerInvoice({ order }: { order: Order }) {
     return sum + (base + extras) * item.quantity
   }, 0)
 
-  const lines: string[] = []
-
-  // Header
-  lines.push(sep("="))
-  lines.push(center("PIZZERIA NAPOLITANA"))
-  lines.push(sep("="))
-  lines.push("")
-
-  // Date
-  const dateStr = format(
-    new Date(order.created_at),
-    "dd 'de' MMMM, yyyy",
-    { locale: es }
-  )
-  lines.push(center(dateStr))
-  lines.push("")
-  lines.push(sep("-"))
-
-  // Address
-  lines.push("DIRECCION DE ENTREGA:")
-  lines.push(order.address_street)
-  if (order.address_floor_apt) {
-    lines.push(`Piso/Dpto: ${order.address_floor_apt}`)
-  }
-  if (order.address_reference) {
-    lines.push(`Ref: ${order.address_reference}`)
-  }
-  lines.push(sep("-"))
-  lines.push("")
-
-  // Items
-  for (const item of order.items) {
-    const extras = item.extra_ingredients.reduce(
-      (s, e) => s + (Number(e.extra_cost_snapshot) || 0),
-      0
-    )
-    const base = Number(item.base_price_snapshot) || 0
-    const itemTotal = (base + extras) * item.quantity
-
-    const qty = formatQty(item.quantity)
-    const name = item.product_name_snapshot
-    const totalStr = `$${itemTotal.toFixed(2)}`
-    const prefix = `${qty}x ${name}`
-
-    lines.push(leftRight(prefix, totalStr))
-
-    if (item.removed_ingredients.length > 0) {
-      lines.push(
-        `   Sin: ${item.removed_ingredients.map((r) => r.ingredient_name_snapshot).join(", ")}`
-      )
-    }
-    if (item.extra_ingredients.length > 0) {
-      for (const e of item.extra_ingredients) {
-        const cost = Number(e.extra_cost_snapshot) || 0
-        lines.push(
-          `   Extra: ${e.ingredient_name_snapshot} (+$${cost.toFixed(2)})`
-        )
-      }
-    }
-    if (item.note) {
-      lines.push(`   * ${item.note}`)
-    }
-  }
-
-  lines.push("")
-  lines.push(sep("-"))
-
-  // Totals
-  lines.push(leftRight("Subtotal:", `$${subtotal.toFixed(2)}`))
-  if (discount > 0) {
-    let discLabel = "Descuento"
-    if (order.discount_reason) {
-      discLabel += ` (${order.discount_reason})`
-    }
-    discLabel += ":"
-    lines.push(leftRight(discLabel, `-$${discount.toFixed(2)}`))
-  }
-  lines.push(sep("="))
-  lines.push(leftRight("TOTAL:", `$${total.toFixed(2)}`))
-  lines.push(sep("="))
-  lines.push("")
-
-  // Payment method
   const pm = order.payment_method || "efectivo"
-  if (pm === "transferencia") {
-    lines.push(sep("*"))
-    lines.push(center("** PAGADO POR TRANSFERENCIA **"))
-    lines.push(sep("*"))
-  } else {
-    const pmLabel = pm === "pos" ? "POS" : "Efectivo"
-    lines.push(center(`Pago: ${pmLabel}`))
-  }
-  lines.push("")
-
-  // Footer
-  lines.push(center("Gracias por su preferencia"))
-  lines.push(center("Pizzeria Napolitana"))
-  lines.push("")
 
   return (
-    <div className="print-only">
-      <pre
-        style={{
-          fontFamily: "'Courier New', Courier, monospace",
-          fontSize: "11px",
-          lineHeight: "1.4",
-          margin: 0,
-          whiteSpace: "pre",
-        }}
-      >
-        {lines.join("\n")}
-      </pre>
+    <div className="print-only mx-auto w-full max-w-[80mm] bg-white p-4 font-sans text-black print:max-w-none print:p-0">
+      {/* Logo Section */}
+      <div className="mb-4 flex justify-center border-b border-gray-100 pb-4 text-center">
+        <img
+          src="/logo.svg"
+          alt="Pizzeria Napolitana"
+          className="h-32 w-auto object-contain invert grayscale contrast-[200%]"
+        />
+      </div>
+
+      {/* Date block */}
+      <div className="mb-6 border-b border-gray-100 pb-2 text-center">
+        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          {format(new Date(order.created_at), "dd 'de' MMMM, yyyy", {
+            locale: es,
+          })}
+        </p>
+      </div>
+
+      {/* Address */}
+      <div className="border-b border-gray-200 py-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Direccion de entrega
+        </p>
+        <p className="mt-1 text-sm">
+          {order.address_street}
+          {order.address_floor_apt && `, Piso/Dpto: ${order.address_floor_apt}`}
+        </p>
+        {order.address_reference && (
+          <p className="text-sm text-gray-500">
+            Ref: {order.address_reference}
+          </p>
+        )}
+      </div>
+
+      {/* Items */}
+      <div className="py-4">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <th className="pb-2">Producto</th>
+              <th className="pb-2 text-center">Cant.</th>
+              <th className="pb-2 text-right">Precio</th>
+              <th className="pb-2 text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.items.map((item) => {
+              const extras = item.extra_ingredients.reduce(
+                (s, e) => s + (Number(e.extra_cost_snapshot) || 0),
+                0
+              )
+              const base = Number(item.base_price_snapshot) || 0
+              const itemTotal = (base + extras) * item.quantity
+
+              return (
+                <tr key={item.id} className="border-b border-gray-100">
+                  <td className="py-3">
+                    <p className="text-sm font-medium">
+                      {item.product_name_snapshot}
+                    </p>
+                    {item.removed_ingredients.length > 0 && (
+                      <p className="text-xs text-gray-500">
+                        Sin:{" "}
+                        {item.removed_ingredients
+                          .map((r) => r.ingredient_name_snapshot)
+                          .join(", ")}
+                      </p>
+                    )}
+                    {item.extra_ingredients.length > 0 && (
+                      <p className="text-xs text-gray-500">
+                        Extra:{" "}
+                        {item.extra_ingredients
+                          .map(
+                            (e) =>
+                              `${e.ingredient_name_snapshot} (+$${(Number(e.extra_cost_snapshot) || 0).toFixed(2)})`
+                          )
+                          .join(", ")}
+                      </p>
+                    )}
+                    {item.note && (
+                      <p className="text-xs italic text-gray-400">
+                        {item.note}
+                      </p>
+                    )}
+                  </td>
+                  <td className="py-3 text-center text-sm">{formatQty(item.quantity)}</td>
+                  <td className="py-3 text-right text-sm">
+                    ${((Number(item.base_price_snapshot) || 0) + extras).toFixed(2)}
+                  </td>
+                  <td className="py-3 text-right text-sm font-medium">
+                    ${itemTotal.toFixed(2)}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Totals */}
+      <div className="flex justify-end">
+        <div className="w-64 space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-500">Subtotal</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500">
+                Descuento
+                {order.discount_reason && (
+                  <span className="ml-1 text-xs">({order.discount_reason})</span>
+                )}
+              </span>
+              <span className="text-green-600">-${discount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="border-t border-gray-200 pt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-base font-semibold">Total</span>
+              <span className="text-2xl font-bold">${total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment method */}
+      {pm === "transferencia" ? (
+        <div className="mt-4 border-2 border-gray-800 py-2 text-center">
+          <p className="text-sm font-bold uppercase">Pagado por Transferencia</p>
+          <p className="mt-1 text-lg font-bold">Total: ${total.toFixed(2)}</p>
+        </div>
+      ) : (
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-500">
+            Pago: {pm === "pos" ? "POS" : "Efectivo"}
+          </p>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="mt-12 border-t border-gray-200 pt-4 text-center">
+        <p className="text-xs text-gray-400">
+          Gracias por su preferencia - Pizzeria Napolitana
+        </p>
+      </div>
     </div>
   )
 }

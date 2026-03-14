@@ -232,7 +232,7 @@ export async function deleteOrder(id: number) {
   }
 }
 
-export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas: number }> {
+export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas: number; medias: number }> {
   try {
     const rows = await dbAll<{ product_name_snapshot: string; total_qty: number }>(
       `SELECT oi.product_name_snapshot, SUM(oi.quantity) as total_qty
@@ -244,17 +244,20 @@ export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas:
 
     let pizzas = 0
     let pizzetas = 0
+    let medias = 0
     for (const row of rows) {
       const name = row.product_name_snapshot.toLowerCase()
       if (name.includes("pizzeta")) {
         pizzetas += row.total_qty
+      } else if (name.includes("media")) {
+        medias += row.total_qty
       } else if (name.includes("pizza")) {
         pizzas += row.total_qty
       }
     }
-    return { pizzas, pizzetas }
+    return { pizzas, pizzetas, medias }
   } catch (e) {
     console.error("[getTodayPizzaCounts]", e)
-    return { pizzas: 0, pizzetas: 0 }
+    return { pizzas: 0, pizzetas: 0, medias: 0 }
   }
 }
