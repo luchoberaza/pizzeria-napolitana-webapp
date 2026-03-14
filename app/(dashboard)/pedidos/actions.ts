@@ -1,7 +1,7 @@
 "use server"
 
 import Database from "better-sqlite3"
-import { dbRunReturn, dbTransaction } from "@/lib/db"
+import { dbAll, dbRunReturn, dbTransaction } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
 export type OrderItem = {
@@ -21,6 +21,7 @@ export type OrderData = {
   items: OrderItem[]
   discountAmount: number
   discountReason: string
+  paymentMethod: "efectivo" | "pos" | "transferencia"
 }
 
 export type Order = {
@@ -32,6 +33,7 @@ export type Order = {
   discount_amount: number
   discount_reason: string
   total_snapshot: number
+  payment_method: string
   created_at: string
   items: OrderItemDB[]
 }
@@ -73,8 +75,8 @@ export async function createOrder(data: OrderData) {
 
     const orderId = await dbTransaction((database: Database.Database) => {
       const insertOrder = database.prepare(
-        `INSERT INTO orders (address_street, address_floor_apt, address_reference, discount_amount, discount_reason, total_snapshot)
-         VALUES (?, ?, ?, ?, ?, ?)`
+        `INSERT INTO orders (address_street, address_floor_apt, address_reference, discount_amount, discount_reason, total_snapshot, payment_method)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
       const orderResult = insertOrder.run(
         data.addressStreet.trim(),
@@ -82,7 +84,8 @@ export async function createOrder(data: OrderData) {
         data.addressReference.trim(),
         discountAmount,
         data.discountReason.trim(),
-        total
+        total,
+        data.paymentMethod
       )
       const orderId = Number((orderResult as { lastInsertRowid: number }).lastInsertRowid)
 
@@ -226,5 +229,32 @@ export async function deleteOrder(id: number) {
   } catch (e) {
     console.error("[deleteOrder]", e)
     return { error: "Error al eliminar el pedido." }
+  }
+}
+
+export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas: number }> {
+  try {
+    const rows = await dbAll<{ product_name_snapshot: string; total_qty: number }>(
+      `SELECT oi.product_name_snapshot, SUM(oi.quantity) as total_qty
+       FROM order_items oi
+       JOIN orders o ON o.id = oi.order_id
+       WHERE date(o.created_at) = date('now')
+       GROUP BY oi.product_name_snapshot`
+    )
+
+    let pizzas = 0
+    let pizzetas = 0
+    for (const row of rows) {
+      const name = row.product_name_snapshot.toLowerCase()
+      if (name.includes("pizzeta")) {
+        pizzetas += row.total_qty
+      } else if (name.includes("pizza")) {
+        pizzas += row.total_qty
+      }
+    }
+    return { pizzas, pizzetas }
+  } catch (e) {
+    console.error("[getTodayPizzaCounts]", e)
+    return { pizzas: 0, pizzetas: 0 }
   }
 }

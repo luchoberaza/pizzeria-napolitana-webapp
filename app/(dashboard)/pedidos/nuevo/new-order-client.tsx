@@ -12,6 +12,9 @@ import {
   Printer,
   Tag,
   Search,
+  Banknote,
+  CreditCard,
+  ArrowRightLeft,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,9 +46,13 @@ type CartItem = {
 export function NewOrderClient({
   products,
   allIngredients,
+  initialPizzaCount,
+  initialPizzetaCount,
 }: {
   products: Product[]
   allIngredients: Ingredient[]
+  initialPizzaCount: number
+  initialPizzetaCount: number
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -66,6 +73,9 @@ export function NewOrderClient({
   const [discountAmount, setDiscountAmount] = useState("")
   const [discountReason, setDiscountReason] = useState("")
   const [discountMode, setDiscountMode] = useState<"fixed" | "percent">("fixed")
+
+  // Payment method
+  const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "pos" | "transferencia">("efectivo")
 
   // Saved order for print
   const [savedOrderId, setSavedOrderId] = useState<number | null>(null)
@@ -141,6 +151,7 @@ export function NewOrderClient({
       addressReference: reference,
       discountAmount: discount,
       discountReason,
+      paymentMethod,
       items: cart.map(
         (item): OrderItem => ({
           productId: item.productId,
@@ -174,7 +185,7 @@ export function NewOrderClient({
         router.push("/pedidos")
       }
     })
-  }, [cart, address, floorApt, reference, discount, discountReason, router])
+  }, [cart, address, floorApt, reference, discount, discountReason, paymentMethod, router])
 
   return (
     <div>
@@ -184,6 +195,16 @@ export function NewOrderClient({
           <p className="mt-1 text-sm text-muted-foreground">
             Selecciona productos, personaliza y confirma
           </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
+            <span className="text-xs font-medium text-muted-foreground">Pizzas hoy:</span>
+            <span className="text-sm font-bold text-napoli-orange">{initialPizzaCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
+            <span className="text-xs font-medium text-muted-foreground">Pizzetas hoy:</span>
+            <span className="text-sm font-bold text-napoli-orange">{initialPizzetaCount}</span>
+          </div>
         </div>
       </div>
 
@@ -501,6 +522,55 @@ export function NewOrderClient({
                   ${total.toFixed(2)}
                 </span>
               </div>
+            </div>
+          </section>
+
+          {/* Payment Method */}
+          <section className="glass rounded-xl p-5 shadow-sm">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <Banknote className="h-4 w-4" />
+              Método de pago
+            </h2>
+            <div className="mt-3 flex gap-1 rounded-lg border p-1">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("efectivo")}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  paymentMethod === "efectivo"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                <Banknote className="h-4 w-4" />
+                Efectivo
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("pos")}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  paymentMethod === "pos"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                <CreditCard className="h-4 w-4" />
+                POS
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("transferencia")}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  paymentMethod === "transferencia"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                Transferencia
+              </button>
             </div>
           </section>
 

@@ -12,6 +12,17 @@ type TicketItem = {
   extraIngredients: { name: string }[]
 }
 
+const W = 42
+
+function center(text: string): string {
+  const pad = Math.max(0, W - text.length)
+  return " ".repeat(Math.floor(pad / 2)) + text
+}
+
+function sep(char = "-"): string {
+  return char.repeat(W)
+}
+
 export function KitchenTicket({
   orderId,
   date,
@@ -23,58 +34,57 @@ export function KitchenTicket({
   address: { street: string; floorApt: string; reference: string }
   items: TicketItem[]
 }) {
+  const lines: string[] = []
+
+  lines.push(sep("="))
+  lines.push(center("C O C I N A"))
+  lines.push(center(`#${orderId}`))
+  lines.push(center(format(date, "dd/MM/yyyy HH:mm", { locale: es })))
+  lines.push(sep("="))
+
+  // Address
+  lines.push("DIRECCION:")
+  lines.push(address.street)
+  if (address.floorApt) lines.push(`Piso/Dpto: ${address.floorApt}`)
+  if (address.reference) lines.push(`Ref: ${address.reference}`)
+  lines.push(sep("-"))
+
+  // Items
+  items.forEach((item, idx) => {
+    if (idx > 0) lines.push("")
+    lines.push(`${formatQty(item.quantity)}x ${item.productName}`)
+    if (item.removedIngredients.length > 0) {
+      lines.push(
+        `   SIN: ${item.removedIngredients.map((r) => r.name).join(", ")}`
+      )
+    }
+    if (item.extraIngredients.length > 0) {
+      lines.push(
+        `   EXTRA: ${item.extraIngredients.map((e) => e.name).join(", ")}`
+      )
+    }
+    if (item.note) {
+      lines.push(`   NOTA: ${item.note}`)
+    }
+  })
+
+  lines.push(sep("-"))
+  lines.push(center("Pizzeria Napolitana"))
+  lines.push(sep("="))
+
   return (
-    <div className="print-only mx-auto w-full max-w-[80mm] bg-white p-4 font-mono text-black print:max-w-none print:p-0">
-      <div className="border-b-2 border-dashed border-black pb-3 text-center">
-        <h1 className="text-2xl font-bold">COCINA</h1>
-        <p className="mt-1 text-3xl font-black">#{orderId}</p>
-        <p className="mt-1 text-sm">
-          {format(date, "dd/MM/yyyy HH:mm", { locale: es })}
-        </p>
-      </div>
-
-      <div className="border-b-2 border-dashed border-black py-3">
-        <p className="text-sm font-bold uppercase">DIRECCION:</p>
-        <p className="text-sm">
-          {address.street}
-        </p>
-        {address.floorApt && (
-          <p className="text-sm">Piso/Dpto: {address.floorApt}</p>
-        )}
-        {address.reference && (
-          <p className="text-sm">Ref: {address.reference}</p>
-        )}
-      </div>
-
-      <div className="py-3">
-        {items.map((item, idx) => (
-          <div
-            key={idx}
-            className={`${idx > 0 ? "mt-3 border-t border-dashed border-gray-400 pt-3" : ""}`}
-          >
-            <p className="text-base font-bold">
-              {formatQty(item.quantity)}x {item.productName}
-            </p>
-            {item.removedIngredients.length > 0 && (
-              <p className="ml-2 text-sm font-bold">
-                SIN: {item.removedIngredients.map((r) => r.name).join(", ")}
-              </p>
-            )}
-            {item.extraIngredients.length > 0 && (
-              <p className="ml-2 text-sm font-bold">
-                EXTRA: {item.extraIngredients.map((e) => e.name).join(", ")}
-              </p>
-            )}
-            {item.note && (
-              <p className="ml-2 text-sm italic">NOTA: {item.note}</p>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="border-t-2 border-dashed border-black pt-3 text-center">
-        <p className="text-xs">Pizzeria Napolitana</p>
-      </div>
+    <div className="print-only">
+      <pre
+        style={{
+          fontFamily: "'Courier New', Courier, monospace",
+          fontSize: "12px",
+          lineHeight: "1.5",
+          margin: 0,
+          whiteSpace: "pre",
+        }}
+      >
+        {lines.join("\n")}
+      </pre>
     </div>
   )
 }

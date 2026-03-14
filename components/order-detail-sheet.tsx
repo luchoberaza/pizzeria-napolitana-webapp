@@ -2,7 +2,7 @@
 
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { MapPin, CalendarDays, ShoppingBag, Tag } from "lucide-react"
+import { MapPin, CalendarDays, ShoppingBag, Tag, Banknote, CreditCard, ArrowRightLeft } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -55,6 +55,19 @@ export function OrderDetailSheet({
                 new Date(order.created_at.replace(' ', 'T') + 'Z'),
                 "d 'de' MMMM yyyy, HH:mm",
                 { locale: es }
+              )}
+            </span>
+          </div>
+
+          {/* Payment method */}
+          <div className="flex items-center gap-2 rounded-lg bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+            {order.payment_method === "transferencia" && <ArrowRightLeft className="h-4 w-4 shrink-0 text-blue-500" />}
+            {order.payment_method === "pos" && <CreditCard className="h-4 w-4 shrink-0 text-purple-500" />}
+            {(order.payment_method === "efectivo" || !order.payment_method) && <Banknote className="h-4 w-4 shrink-0 text-green-500" />}
+            <span>
+              Pago: {order.payment_method === "transferencia" ? "Transferencia" : order.payment_method === "pos" ? "POS" : "Efectivo"}
+              {order.payment_method === "transferencia" && (
+                <span className="ml-1 font-semibold text-blue-600 dark:text-blue-400">(Pagado)</span>
               )}
             </span>
           </div>

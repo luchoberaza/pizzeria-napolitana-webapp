@@ -13,6 +13,9 @@ import {
   Trash2,
   CalendarDays,
   Eye,
+  Banknote,
+  CreditCard,
+  ArrowRightLeft,
 } from "lucide-react"
 import { cn, formatQty } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -35,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-export function OrdersClient({ orders }: { orders: Order[] }) {
+export function OrdersClient({ orders, pizzaCount, pizzetaCount }: { orders: Order[]; pizzaCount: number; pizzetaCount: number }) {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<"all" | "pending" | "delivered">("all")
   const [isPending, startTransition] = useTransition()
@@ -150,7 +153,18 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
             Historial y seguimiento de pedidos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 shadow-sm">
+              <span className="text-xs font-medium text-muted-foreground">Pizzas hoy:</span>
+              <span className="text-sm font-bold text-napoli-orange">{pizzaCount}</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 shadow-sm">
+              <span className="text-xs font-medium text-muted-foreground">Pizzetas hoy:</span>
+              <span className="text-sm font-bold text-napoli-orange">{pizzetaCount}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
           <Button
             variant={filter === "all" ? "default" : "outline"}
             size="sm"
@@ -189,6 +203,7 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
             <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
             Enviados
           </Button>
+          </div>
         </div>
       </div>
 
@@ -263,6 +278,22 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                               }
                             >
                               {order.status_delivered ? "Enviado" : "Pendiente"}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-xs",
+                                order.payment_method === "transferencia"
+                                  ? "border-blue-400 bg-blue-50 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
+                                  : order.payment_method === "pos"
+                                  ? "border-purple-400 bg-purple-50 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300"
+                                  : "border-green-400 bg-green-50 text-green-700 dark:bg-green-500/20 dark:text-green-300"
+                              )}
+                            >
+                              {order.payment_method === "transferencia" && <ArrowRightLeft className="mr-1 h-3 w-3" />}
+                              {order.payment_method === "pos" && <CreditCard className="mr-1 h-3 w-3" />}
+                              {(order.payment_method === "efectivo" || !order.payment_method) && <Banknote className="mr-1 h-3 w-3" />}
+                              {order.payment_method === "transferencia" ? "Transferencia" : order.payment_method === "pos" ? "POS" : "Efectivo"}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {format(

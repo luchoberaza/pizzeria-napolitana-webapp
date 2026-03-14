@@ -25,6 +25,12 @@ function getDb(): Database.Database {
 
     db = new Database(dbPath)
     db.pragma("foreign_keys = ON")
+
+    // Auto-migrate: add payment_method column if missing
+    const cols = db.prepare("PRAGMA table_info(orders)").all() as { name: string }[]
+    if (!cols.some((c) => c.name === "payment_method")) {
+      db.prepare("ALTER TABLE orders ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'efectivo'").run()
+    }
   }
   return db
 }

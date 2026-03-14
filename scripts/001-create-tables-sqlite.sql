@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS orders (
   discount_amount REAL NOT NULL DEFAULT 0,
   discount_reason TEXT DEFAULT '',
   total_snapshot REAL NOT NULL DEFAULT 0,
+  payment_method TEXT NOT NULL DEFAULT 'efectivo',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
