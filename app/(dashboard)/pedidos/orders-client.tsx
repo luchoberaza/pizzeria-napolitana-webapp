@@ -249,10 +249,12 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: {
                 const name = item.product_name_snapshot.toLowerCase()
                 if (name.includes("pizzeta")) {
                   dayPizzetas += item.quantity
-                } else if (name.includes("media")) {
-                  dayMedias += item.quantity
                 } else if (name.includes("pizza")) {
-                  dayPizzas += item.quantity
+                  if (item.quantity === 0.5) {
+                    dayMedias += 1
+                  } else {
+                    dayPizzas += item.quantity
+                  }
                 }
               }
             }

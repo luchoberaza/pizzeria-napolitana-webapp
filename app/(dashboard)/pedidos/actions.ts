@@ -123,6 +123,7 @@ export async function createOrder(data: OrderData) {
     })
 
     revalidatePath("/pedidos")
+    revalidatePath("/pedidos/nuevo")
     return { success: true, orderId }
   } catch (e) {
     console.error("[createOrder]", e)
@@ -134,7 +135,7 @@ export async function getOrders(): Promise<Order[]> {
   try {
     return await dbTransaction((database: Database.Database) => {
       try {
-        database.prepare("DELETE FROM orders WHERE created_at < datetime('now', '-30 days')").run()
+        database.prepare("DELETE FROM orders WHERE created_at < datetime('now', 'localtime', '-30 days')").run()
       } catch (e) {
         console.error("[getOrders] Limpieza automática:", e)
       }
@@ -224,6 +225,7 @@ export async function deleteOrder(id: number) {
   try {
     const { changes } = await dbRunReturn("DELETE FROM orders WHERE id = ?", [id])
     revalidatePath("/pedidos")
+    revalidatePath("/pedidos/nuevo")
     if (changes === 0) return { error: "Pedido no encontrado" }
     return { success: true }
   } catch (e) {
@@ -234,12 +236,11 @@ export async function deleteOrder(id: number) {
 
 export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas: number; medias: number }> {
   try {
-    const rows = await dbAll<{ product_name_snapshot: string; total_qty: number }>(
-      `SELECT oi.product_name_snapshot, SUM(oi.quantity) as total_qty
+    const rows = await dbAll<{ product_name_snapshot: string; quantity: number }>(
+      `SELECT oi.product_name_snapshot, oi.quantity
        FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
-       WHERE date(o.created_at) = date('now')
-       GROUP BY oi.product_name_snapshot`
+       WHERE date(o.created_at, 'localtime') = date('now', 'localtime')`
     )
 
     let pizzas = 0
@@ -248,11 +249,13 @@ export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas:
     for (const row of rows) {
       const name = row.product_name_snapshot.toLowerCase()
       if (name.includes("pizzeta")) {
-        pizzetas += row.total_qty
-      } else if (name.includes("media")) {
-        medias += row.total_qty
+        pizzetas += row.quantity
       } else if (name.includes("pizza")) {
-        pizzas += row.total_qty
+        if (row.quantity === 0.5) {
+          medias += 1
+        } else {
+          pizzas += row.quantity
+        }
       }
     }
     return { pizzas, pizzetas, medias }
