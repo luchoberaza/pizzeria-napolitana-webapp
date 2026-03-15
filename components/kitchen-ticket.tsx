@@ -78,7 +78,8 @@ export function KitchenTicket({
           fontSize: "24px",
           lineHeight: "1.3",
           margin: 0,
-          whiteSpace: "pre",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
           color: "black",
         }}
       >
