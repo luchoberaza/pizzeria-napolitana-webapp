@@ -12,7 +12,7 @@ type TicketItem = {
   extraIngredients: { name: string }[]
 }
 
-const W = 21
+const W = 15
 
 function center(text: string): string {
   const pad = Math.max(0, W - text.length)
