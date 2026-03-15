@@ -14,6 +14,7 @@ export default async function PedidosPage() {
       pizzaCount={pizzaCounts.pizzas}
       pizzetaCount={pizzaCounts.pizzetas}
       mediaCount={pizzaCounts.medias}
+      totalSold={pizzaCounts.totalSold}
     />
   )
 }

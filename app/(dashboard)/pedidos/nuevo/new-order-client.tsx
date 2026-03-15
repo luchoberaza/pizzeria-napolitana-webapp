@@ -49,12 +49,14 @@ export function NewOrderClient({
   initialPizzaCount,
   initialPizzetaCount,
   initialMediaCount,
+  initialTotalSold,
 }: {
   products: Product[]
   allIngredients: Ingredient[]
   initialPizzaCount: number
   initialPizzetaCount: number
   initialMediaCount: number
+  initialTotalSold: number
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -210,6 +212,10 @@ export function NewOrderClient({
           <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
             <span className="text-xs font-medium text-muted-foreground">Pizzetas hoy:</span>
             <span className="text-sm font-bold text-napoli-orange">{initialPizzetaCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 shadow-sm">
+            <span className="text-xs font-medium text-muted-foreground">Vendido hoy:</span>
+            <span className="text-sm font-bold text-napoli-green">${initialTotalSold.toLocaleString("es-AR")}</span>
           </div>
         </div>
       </div>

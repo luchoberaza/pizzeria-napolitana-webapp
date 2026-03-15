@@ -18,6 +18,7 @@ export default async function NuevoPedidoPage() {
       initialPizzaCount={pizzaCounts.pizzas}
       initialPizzetaCount={pizzaCounts.pizzetas}
       initialMediaCount={pizzaCounts.medias}
+      initialTotalSold={pizzaCounts.totalSold}
     />
   )
 }

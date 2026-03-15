@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: { orders: Order[]; pizzaCount: number; pizzetaCount: number; mediaCount: number }) {
+export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount, totalSold }: { orders: Order[]; pizzaCount: number; pizzetaCount: number; mediaCount: number; totalSold: number }) {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<"all" | "pending" | "delivered">("all")
   const [isPending, startTransition] = useTransition()
@@ -167,6 +167,10 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: {
               <span className="text-xs font-medium text-muted-foreground">Pizzetas hoy:</span>
               <span className="text-sm font-bold text-napoli-orange">{pizzetaCount}</span>
             </div>
+            <div className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 shadow-sm">
+              <span className="text-xs font-medium text-muted-foreground">Vendido hoy:</span>
+              <span className="text-sm font-bold text-napoli-green">${totalSold.toLocaleString("es-AR")}</span>
+            </div>
           </div>
           <div className="flex gap-2">
           <Button
@@ -244,7 +248,9 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: {
             let dayPizzas = 0
             let dayMedias = 0
             let dayPizzetas = 0
+            let dayTotal = 0
             for (const order of groups[title]) {
+              dayTotal += Number(order.total_snapshot) || 0
               for (const item of order.items) {
                 const name = item.product_name_snapshot.toLowerCase()
                 if (name.includes("pizzeta")) {
@@ -273,7 +279,7 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: {
                     {groups[title].length} {groups[title].length === 1 ? 'PEDIDO' : 'PEDIDOS'}
                   </Badge>
                 </div>
-                {(dayPizzas > 0 || dayMedias > 0 || dayPizzetas > 0) && (
+                {(dayPizzas > 0 || dayMedias > 0 || dayPizzetas > 0 || dayTotal > 0) && (
                   <div className="mt-1.5 flex items-center gap-2">
                     {dayPizzas > 0 && (
                       <span className="text-[11px] text-muted-foreground">
@@ -288,6 +294,11 @@ export function OrdersClient({ orders, pizzaCount, pizzetaCount, mediaCount }: {
                     {dayPizzetas > 0 && (
                       <span className="text-[11px] text-muted-foreground">
                         Pizzetas: <span className="font-semibold text-napoli-orange">{dayPizzetas}</span>
+                      </span>
+                    )}
+                    {dayTotal > 0 && (
+                      <span className="text-[11px] text-muted-foreground">
+                        Vendido: <span className="font-semibold text-napoli-green">${dayTotal.toLocaleString("es-AR")}</span>
                       </span>
                     )}
                   </div>

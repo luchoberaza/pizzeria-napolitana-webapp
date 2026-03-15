@@ -12,7 +12,7 @@ type TicketItem = {
   extraIngredients: { name: string }[]
 }
 
-const W = 42
+const W = 32
 
 function center(text: string): string {
   const pad = Math.max(0, W - text.length)
@@ -68,8 +68,6 @@ export function KitchenTicket({
     }
   })
 
-  lines.push(sep("-"))
-  lines.push(center("Pizzeria Napolitana"))
   lines.push(sep("="))
 
   return (
@@ -77,8 +75,8 @@ export function KitchenTicket({
       <pre
         style={{
           fontFamily: "'Courier New', Courier, monospace",
-          fontSize: "12px",
-          lineHeight: "1.5",
+          fontSize: "16px",
+          lineHeight: "1.4",
           margin: 0,
           whiteSpace: "pre",
           color: "black",

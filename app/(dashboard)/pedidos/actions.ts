@@ -234,7 +234,7 @@ export async function deleteOrder(id: number) {
   }
 }
 
-export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas: number; medias: number }> {
+export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas: number; medias: number; totalSold: number }> {
   try {
     const rows = await dbAll<{ product_name_snapshot: string; quantity: number }>(
       `SELECT oi.product_name_snapshot, oi.quantity
@@ -258,9 +258,17 @@ export async function getTodayPizzaCounts(): Promise<{ pizzas: number; pizzetas:
         }
       }
     }
-    return { pizzas, pizzetas, medias }
+
+    const totalRow = await dbAll<{ total: number }>(
+      `SELECT COALESCE(SUM(total_snapshot), 0) as total
+       FROM orders
+       WHERE date(created_at, 'localtime') = date('now', 'localtime')`
+    )
+    const totalSold = totalRow[0]?.total ?? 0
+
+    return { pizzas, pizzetas, medias, totalSold }
   } catch (e) {
     console.error("[getTodayPizzaCounts]", e)
-    return { pizzas: 0, pizzetas: 0, medias: 0 }
+    return { pizzas: 0, pizzetas: 0, medias: 0, totalSold: 0 }
   }
 }
