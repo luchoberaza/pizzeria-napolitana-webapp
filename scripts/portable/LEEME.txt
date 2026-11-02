@@ -1,0 +1,98 @@
+===============================================================
+  PIZZERIA NAPOLITANA - Version portable
+===============================================================
+
+  No hace falta instalar NADA. Ni Node.js, ni nada.
+  La base de datos con los productos y precios ya viene
+  incluida adentro.
+
+
+---------------------------------------------------------------
+  COMO USARLA
+---------------------------------------------------------------
+
+  1. Descomprimi el ZIP completo en la PC destino,
+     en una carpeta de RUTA CORTA. Por ejemplo:
+
+         C:\PizzeriaNapolitana
+
+     IMPORTANTE - dos cosas:
+
+     a) Descomprimilo de verdad. Hacer doble clic "adentro
+        del ZIP" no funciona.
+
+     b) La ruta tiene que ser corta. Si lo descomprimis muy
+        adentro (por ejemplo en Descargas dentro de OneDrive
+        dentro de otra carpeta...) Windows corta los nombres
+        largos y faltan archivos. Con C:\PizzeriaNapolitana
+        no hay problema.
+
+  2. Doble clic en INICIAR_PIZZERIA.bat
+
+  3. Se abre la pizzeria en su propia ventana. Listo.
+
+  4. Para cerrar: cerra la ventana de la pizzeria y despues
+     presiona ENTER en la ventana negra.
+
+
+---------------------------------------------------------------
+  LOS DATOS (productos, precios, ventas)
+---------------------------------------------------------------
+
+  Todos los datos viven en UN solo archivo:
+
+      data\pizzeria.sqlite
+
+  Ese archivo ya viene adentro del ZIP, con los productos y
+  precios cargados. No hay que hacer nada.
+
+  Si mas adelante queres reemplazarlo por una version mas
+  nueva (por ejemplo la de otra PC donde siguieron vendiendo):
+
+  1. Cerra la pizzeria en las DOS computadoras.
+  2. Copia el pizzeria.sqlite de la otra PC.
+  3. Pegalo en la carpeta data\ de este portable,
+     reemplazando el que hay.
+  4. Abri INICIAR_PIZZERIA.bat
+
+  Al arrancar, la app revisa la base y le agrega sola lo que
+  le falte, asi que podes pegar una base de una version vieja
+  sin problema. No se borra nada.
+
+
+---------------------------------------------------------------
+  COPIAS DE SEGURIDAD
+---------------------------------------------------------------
+
+  Copia data\pizzeria.sqlite a un pendrive cada tanto.
+  Ese archivo es toda la pizzeria.
+
+
+---------------------------------------------------------------
+  SI ALGO FALLA
+---------------------------------------------------------------
+
+  * "Faltan archivos de la aplicacion"
+    -> No descomprimiste el ZIP, o lo descomprimiste en una
+       ruta demasiado larga. Descomprimilo en C:\PizzeriaNapolitana
+
+  * "El servidor no arranco"
+    -> Mira el archivo servidor.log que queda en esta carpeta,
+       ahi esta el detalle del error.
+
+  * Windows muestra "Windows protegio tu PC" (SmartScreen)
+    -> Clic en "Mas informacion" y despues en "Ejecutar de
+       todas formas". Pasa porque el .bat no esta firmado.
+
+  * El antivirus se queja de runtime\node.exe
+    -> Es Node.js oficial, descargado de nodejs.org.
+       Agregalo como excepcion.
+
+
+---------------------------------------------------------------
+  REQUISITOS
+---------------------------------------------------------------
+
+  Windows 10 u 11, 64 bits.
+  Para imprimir tickets: la impresora termica instalada como
+  impresora normal de Windows.

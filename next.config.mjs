@@ -15,6 +15,10 @@ const nextConfig = {
     unoptimized: true,
   },
   serverExternalPackages: ["better-sqlite3"],
+  // Con PORTABLE_BUILD=1 se genera .next/standalone: un servidor autocontenido
+  // con solo las dependencias que realmente usa, para empaquetar el portable.
+  // Sin la variable el build sigue siendo el de siempre (npm run build / start).
+  ...(process.env.PORTABLE_BUILD === "1" ? { output: "standalone" } : {}),
 }
 
 export default nextConfig
